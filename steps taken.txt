@@ -1,0 +1,21 @@
+1. download ceres (version 2.0.0) and eigen (version 2.4.0)
+(commit to repo)
+2. make dirs eigen-bin and ceres-bin
+3. cmake eigen:
+        cd eigen-bin
+        cmake ..\eigen -DCMAKE_GENERATOR_PLATFORM=x64
+4. cmake ceres:
+        cd ceres-bin
+        cmake ..\ceres -DCMAKE_GENERATOR_PLATFORM=x64 -DMINIGLOG=ON -DEIGEN_INCLUDE_DIR_HINTS="..\eigen"
+5. if windows, ceres-bin/internal/ceres will now include ceres.vcxproj
+  
+OPTIONAL:
+   this is written in a super stupid way with hardcoded paths for everything.
+   the hardcoded paths to the ceres folder can be replaced with $(ProjectDir)
+   The OutDirs with hardcoded paths to ceres-bin can be replaced with $(SolutionDir)$(Platform)\$(Configuration)\ 
+   there is also a section of code runing to check cmake (a custom build command around 52 lines long including 12 hardcoded paths). 
+   It had hardcoded paths to where cmake was installed, etc. I can be deleted entirely. 
+
+6. open the vcxproj and build it **in release mode**. You only need to build ceres, not the other projects. This will take forever, because ceres. The built file will be in ceres-bin/lib/Release
+
+7. 
