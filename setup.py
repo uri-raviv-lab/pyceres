@@ -6,7 +6,7 @@ from setuptools import setup
 from distutils.extension import Extension
 import setuptools
 
-INCLUDE_DIR = "IncludeFiles"
+INCLUDE_DIR = "include"
 COMMON_DIR = os.path.join(INCLUDE_DIR, "Common")
 CERES_INCLUDE = os.path.join(COMMON_DIR, "ceres", "include")
 MINIGLOG=os.path.join(CERES_INCLUDE, "miniglog")
@@ -56,8 +56,8 @@ class PrepareCommand(setuptools.Command):
         self.convert_to_c(third_pyx)
 
     def copy_source_files(self):
-        if os.path.exists("IncludeFiles"):
-            shutil.rmtree("IncludeFiles")
+        if os.path.exists(INCLUDE_DIR):
+            shutil.rmtree(INCLUDE_DIR)
         # create directories with the same hierarchy as dplus
         backend_dir = os.path.join(INCLUDE_DIR, "Backend", "Backend")
         os.makedirs(backend_dir)
@@ -68,7 +68,7 @@ class PrepareCommand(setuptools.Command):
         os.makedirs(COMMON_DIR)
         print("copying common files")
         shutil.copy(r"./Common.h", COMMON_DIR)
-        shutil.copytree(r"./Eigen", os.path.join(COMMON_DIR, "Eigen"))
+        shutil.copytree(r"./eigen/Eigen", os.path.join(COMMON_DIR, "Eigen"))
 
         #os.makedirs(CERES_INCLUDE)
         print("copying ceres files")
