@@ -50,9 +50,9 @@ class PrepareCommand(setuptools.Command):
     def run(self):
         print("running prepare command")
         self.copy_source_files()
-        second_pyx = './ceres_wrap/call_obj.pyx'
+        second_pyx = './pyceres/call_obj.pyx'
         self.convert_to_c(second_pyx)
-        third_pyx = './ceres_wrap/pyceres.pyx'
+        third_pyx = './pyceres/pyceres.pyx'
         self.convert_to_c(third_pyx)
 
     def copy_source_files(self):
@@ -135,13 +135,13 @@ class MoveCommand(setuptools.Command):
 
 
 setup(
-    name='ceres-wrap',
-    version='4.3.8.1',
-    packages=['ceres_wrap'],
+    name='pyceres',
+    version='0.1',
+    packages=['pyceres'],
 	install_requires=['numpy>=1.10'],
     include_package_data=True,
     license=LICENSE,  # example license
-    description='Wrap ceres',
+    description='A Python wrapper for Ceres 2.0',
     url='researchsoftware.co.il',
     author='Devora Witty',
     author_email='devorawitty@researchsoftware.co.il',
@@ -162,7 +162,7 @@ setup(
     ext_modules=[
         Extension(
              "pyceres",
-             ["ceres_wrap/pyceres.pyx", "ceres_wrap/call_obj.pyx"],
+             ["pyceres/pyceres.pyx", "pyceres/call_obj.pyx"],
              language='c++',
              include_dirs=[CERES_INCLUDE, INCLUDE_DIR, COMMON_DIR, MINIGLOG, numpy.get_include()],
              define_macros=macros,
