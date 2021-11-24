@@ -12,6 +12,7 @@ core.*
 *.bak
 *~
 *build*
+!buildtests.in
 *.moc.*
 *.moc
 ui_*

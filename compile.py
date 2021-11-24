@@ -16,10 +16,9 @@ def prepare_eigen():
 
     try:
         # Check if the Core directory is *ignored* by git by default. We need to make sure this doesn't happen to us
-        if not os.path.isdir('eigen/Eigen/src/Core'):
-            print('Your Eigen sources miss the Eigen/src/Core directory.')
-            print("This is because Eigen's .gitignore ignores `core`, which on Windows also includes Core")
-            print("Please make sure `core` is removed from eigen/.gitignore before pushing a new Eigen version to our repo")
+        if not os.path.isdir('eigen/Eigen/src/Core') or not os.path.isfile('eigen/scripts/buildtests.in'):
+            print('Your Eigen sources are missing some files')
+            print("This is because Eigen's .gitignore ignores `core` and `*build*`. Please remove both from Eigen's .gitignore and commit again")
             raise ValueError("Misconfigured Eigen")
         os.makedirs('build/eigen')
         os.chdir('build/eigen')
