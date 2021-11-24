@@ -14,11 +14,9 @@ def prepare_eigen():
             print("This is because Eigen's .gitignore ignores `core`, which on Windows also includes Core")
             print("Please make sure `core` is removed from eigen/.gitignore before pushing a new Eigen version to our repo")
             raise ValueError("Misconfigured Eigen")
-        if os.path.isdir('eigen-build'):
-            shutil.rmtree('eigen-build')
-        os.makedirs('eigen-build')
-        os.chdir('eigen-build')
-        os.system('cmake ..\eigen -DCMAKE_GENERATOR_PLATFORM=x64')
+        os.makedirs('build/eigen')
+        os.chdir('build/eigen')
+        os.system('cmake ../../eigen -DCMAKE_GENERATOR_PLATFORM=x64')
     finally:
         os.chdir(cwd)
 
@@ -26,21 +24,21 @@ def prepare_ceres():
     cwd = os.getcwd()
 
     try:
-        if os.path.isdir('ceres-bin'):
-            shutil.rmtree('ceres-bin')
-        os.makedirs('ceres-bin')
-        os.chdir('ceres-bin')
-        os.system('cmake ..\ceres -DCMAKE_GENERATOR_PLATFORM=x64 -DMINIGLOG=ON -DEIGEN_INCLUDE_DIR_HINTS="..\eigen-build"')
+        os.makedirs('build/ceres')
+        os.chdir('build/ceres')
+        os.system('cmake ../../ceres -DCMAKE_GENERATOR_PLATFORM=x64 -DMINIGLOG=ON -DEIGEN_INCLUDE_DIR_HINTS="../eigen"')
     finally:
         os.chdir(cwd)
 
 def compile_ceres():
     if os.name == 'nt':
-        os.system('msbuild .\ceres-bin\internal\ceres\ceres.vcxproj /p:Configuration=Release')
+        os.system('msbuild ./build/ceres/internal/ceres/ceres.vcxproj /p:Configuration=Release')
     else:
         raise ValueError("Non windows OSes are not supported yet")
 
 def run():
+    if os.path.isdir('build'):
+        shutil.rmtree('build')
     prepare_eigen()
     prepare_ceres()
     compile_ceres()

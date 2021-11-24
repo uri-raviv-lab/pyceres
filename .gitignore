@@ -1,5 +1,3 @@
-eigen-build/
-ceres-bin/
 *.egg-info/
 ceres_wrap/*.cpp
 ceres_wrap/*.h

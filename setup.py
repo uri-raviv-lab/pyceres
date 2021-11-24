@@ -6,7 +6,7 @@ from setuptools import setup
 from distutils.extension import Extension
 import setuptools
 
-INCLUDE_DIR = "include"
+INCLUDE_DIR = os.path.join('build', 'include')
 COMMON_DIR = os.path.join(INCLUDE_DIR, "Common")
 CERES_INCLUDE = os.path.join(COMMON_DIR, "ceres", "include")
 MINIGLOG=os.path.join(CERES_INCLUDE, "miniglog")
@@ -20,7 +20,7 @@ with open(os.path.join(os.path.dirname(__file__), 'LICENSE')) as license:
 extra_compile_args = []
 extra_link_args = []
 if sys.platform == 'win32':
-    LIB_DIR = r"./ceres-bin/lib/Release/ceres.lib"
+    LIB_DIR = r"./build/ceres/lib/Release/ceres.lib"
     macros = [('GOOGLE_GLOG_DLL_DECL', '_CRT_SECURE_NO_WARNINGS'),
               ('CERES_USE_CXX_THREADS', None),
               ('_MBCS', None),
