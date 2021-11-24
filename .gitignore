@@ -6,3 +6,4 @@ env/
 build/
 include/
 dist/
+*.whl
