@@ -52,7 +52,7 @@ class PrepareCommand(setuptools.Command):
         self.copy_source_files()
         second_pyx = './ceres_wrap/call_obj.pyx'
         self.convert_to_c(second_pyx)
-        third_pyx = './ceres_wrap/cython_ceres.pyx'
+        third_pyx = './ceres_wrap/pyceres.pyx'
         self.convert_to_c(third_pyx)
 
     def copy_source_files(self):
@@ -161,8 +161,8 @@ setup(
     },
     ext_modules=[
         Extension(
-             "cython_ceres",
-             ["ceres_wrap/cython_ceres.pyx", "ceres_wrap/call_obj.pyx"],
+             "pyceres",
+             ["ceres_wrap/pyceres.pyx", "ceres_wrap/call_obj.pyx"],
              language='c++',
              include_dirs=[CERES_INCLUDE, INCLUDE_DIR, COMMON_DIR, MINIGLOG, numpy.get_include()],
              define_macros=macros,
