@@ -1,7 +1,7 @@
 *.egg-info/
 pyceres/*.cpp
 pyceres/*.h
-!pyxwewa/py_obj_wrapper.h
+!pyceres/py_obj_wrapper.h
 env/
 build/
 include/

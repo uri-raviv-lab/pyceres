@@ -63,11 +63,11 @@ class PrepareCommand(setuptools.Command):
         os.makedirs(backend_dir)
         print("copying backend files")
         #shutil.copy(r"../Backend/Backend/PeriodicSplineSolver.h", backend_dir)
-        shutil.copy(r"./Residual.h", backend_dir)
+        shutil.copy(r"./dplus/Residual.h", backend_dir)
 
         os.makedirs(COMMON_DIR)
         print("copying common files")
-        shutil.copy(r"./Common.h", COMMON_DIR)
+        shutil.copy(r"./dplus/Common.h", COMMON_DIR)
         shutil.copytree(r"./eigen/Eigen", os.path.join(COMMON_DIR, "Eigen"))
 
         #os.makedirs(CERES_INCLUDE)
