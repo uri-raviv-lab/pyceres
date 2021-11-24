@@ -4,4 +4,4 @@
 pip install -r .\requirements.txt
 python .\compile.py
 python setup.py prepare
-pip wheel
+pip wheel .
