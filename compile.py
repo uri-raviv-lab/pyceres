@@ -21,7 +21,7 @@ def prepare_ceres():
 
     try:
         if os.path.isdir('ceres-bin'):
-            shutil.rmtree()
+            shutil.rmtree('ceres-bin')
         os.makedirs('ceres-bin')
         os.chdir('ceres-bin')
         os.system('cmake ..\ceres -DCMAKE_GENERATOR_PLATFORM=x64 -DMINIGLOG=ON -DEIGEN_INCLUDE_DIR_HINTS="..\eigen-build"')
