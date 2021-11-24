@@ -146,7 +146,7 @@ setup(
     author='Devora Witty',
     author_email='devorawitty@researchsoftware.co.il',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
         'License :: Other/Proprietary License',
