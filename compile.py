@@ -8,6 +8,12 @@ def prepare_eigen():
     cwd = os.getcwd()
 
     try:
+        # Check if the Core directory is *ignored* by git by default. We need to make sure this doesn't happen to us
+        if not os.path.isdir('eigen/Eigen/src/Core'):
+            print('Your Eigen sources miss the Eigen/src/Core directory.')
+            print("This is because Eigen's .gitignore ignores `core`, which on Windows also includes Core")
+            print("Please make sure `core` is removed from eigen/.gitignore before pushing a new Eigen version to our repo")
+            raise ValueError("Misconfigured Eigen")
         if os.path.isdir('eigen-build'):
             shutil.rmtree('eigen-build')
         os.makedirs('eigen-build')
