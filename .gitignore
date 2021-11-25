@@ -4,7 +4,6 @@ pyceres/*.h
 !pyceres/py_obj_wrapper.h
 env/
 build/
-include/
 dist/
 *.whl
 linux-wheels/
