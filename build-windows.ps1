@@ -2,6 +2,7 @@
 # with the right python version. cmake and msbuild should be on the system path for this to work.
 
 pip install -r .\requirements.txt
+pip install wheel
 python .\compile.py
 python setup.py prepare
 pip wheel .

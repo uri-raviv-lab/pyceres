@@ -43,6 +43,5 @@ RUN /opt/python/cp310-cp310/bin/pip wheel .
 
 RUN mkdir /wheels
 RUN find . -name "pyceres*whl" -exec auditwheel repair {} -w /wheels \;
-RUN ls -l /wheels
 
 ENTRYPOINT [ "cp", "-r", "/wheels", "/external/pyceres-wheels" ]
