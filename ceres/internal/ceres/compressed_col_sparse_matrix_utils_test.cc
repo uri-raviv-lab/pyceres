@@ -28,13 +28,10 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
-#include "ceres/compressed_col_sparse_matrix_utils.h"
-
 #include <algorithm>
-#include <numeric>
-
-#include "Eigen/SparseCore"
+#include "ceres/compressed_col_sparse_matrix_utils.h"
 #include "ceres/internal/port.h"
+#include "ceres/suitesparse.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
@@ -79,28 +76,40 @@ TEST(_, BlockPermutationToScalarPermutation) {
   expected_scalar_ordering.push_back(8);
 
   vector<int> scalar_ordering;
-  BlockOrderingToScalarOrdering(blocks, block_ordering, &scalar_ordering);
+  BlockOrderingToScalarOrdering(blocks,
+                                block_ordering,
+                                &scalar_ordering);
   EXPECT_EQ(scalar_ordering.size(), expected_scalar_ordering.size());
   for (int i = 0; i < expected_scalar_ordering.size(); ++i) {
     EXPECT_EQ(scalar_ordering[i], expected_scalar_ordering[i]);
   }
 }
 
-static void FillBlock(const vector<int>& row_blocks,
-                      const vector<int>& col_blocks,
-                      const int row_block_id,
-                      const int col_block_id,
-                      vector<Eigen::Triplet<double>>* triplets) {
-  const int row_offset =
-      std::accumulate(&row_blocks[0], &row_blocks[row_block_id], 0);
-  const int col_offset =
-      std::accumulate(&col_blocks[0], &col_blocks[col_block_id], 0);
+// Helper function to fill the sparsity pattern of a TripletSparseMatrix.
+int FillBlock(const vector<int>& row_blocks,
+              const vector<int>& col_blocks,
+              const int row_block_id,
+              const int col_block_id,
+              int* rows,
+              int* cols) {
+  int row_pos = 0;
+  for (int i = 0; i < row_block_id; ++i) {
+    row_pos += row_blocks[i];
+  }
+
+  int col_pos = 0;
+  for (int i = 0; i < col_block_id; ++i) {
+    col_pos += col_blocks[i];
+  }
+
+  int offset = 0;
   for (int r = 0; r < row_blocks[row_block_id]; ++r) {
-    for (int c = 0; c < col_blocks[col_block_id]; ++c) {
-      triplets->push_back(
-          Eigen::Triplet<double>(row_offset + r, col_offset + c, 1.0));
+    for (int c = 0; c < col_blocks[col_block_id]; ++c, ++offset) {
+      rows[offset] = row_pos + r;
+      cols[offset] = col_pos + c;
     }
   }
+  return offset;
 }
 
 TEST(_, ScalarMatrixToBlockMatrix) {
@@ -123,47 +132,67 @@ TEST(_, ScalarMatrixToBlockMatrix) {
   row_blocks.push_back(2);
   row_blocks.push_back(2);
 
-  const int num_rows =
-      std::accumulate(row_blocks.begin(), row_blocks.end(), 0.0);
-  const int num_cols =
-      std::accumulate(col_blocks.begin(), col_blocks.end(), 0.0);
+  TripletSparseMatrix tsm(5, 8, 18);
+  int* rows = tsm.mutable_rows();
+  int* cols = tsm.mutable_cols();
+  std::fill(tsm.mutable_values(), tsm.mutable_values() + 18, 1.0);
+  int offset = 0;
 
-  vector<Eigen::Triplet<double>> triplets;
-  FillBlock(row_blocks, col_blocks, 0, 0, &triplets);
-  FillBlock(row_blocks, col_blocks, 2, 0, &triplets);
-  FillBlock(row_blocks, col_blocks, 1, 1, &triplets);
-  FillBlock(row_blocks, col_blocks, 2, 1, &triplets);
-  FillBlock(row_blocks, col_blocks, 0, 2, &triplets);
-  FillBlock(row_blocks, col_blocks, 1, 3, &triplets);
-  Eigen::SparseMatrix<double> sparse_matrix(num_rows, num_cols);
-  sparse_matrix.setFromTriplets(triplets.begin(), triplets.end());
+#define CERES_TEST_FILL_BLOCK(row_block_id, col_block_id) \
+  offset += FillBlock(row_blocks, col_blocks, \
+                      row_block_id, col_block_id, \
+                      rows + offset, cols + offset);
 
-  vector<int> expected_compressed_block_rows;
-  expected_compressed_block_rows.push_back(0);
-  expected_compressed_block_rows.push_back(2);
-  expected_compressed_block_rows.push_back(1);
-  expected_compressed_block_rows.push_back(2);
-  expected_compressed_block_rows.push_back(0);
-  expected_compressed_block_rows.push_back(1);
+  CERES_TEST_FILL_BLOCK(0, 0);
+  CERES_TEST_FILL_BLOCK(2, 0);
+  CERES_TEST_FILL_BLOCK(1, 1);
+  CERES_TEST_FILL_BLOCK(2, 1);
+  CERES_TEST_FILL_BLOCK(0, 2);
+  CERES_TEST_FILL_BLOCK(1, 3);
+#undef CERES_TEST_FILL_BLOCK
 
-  vector<int> expected_compressed_block_cols;
-  expected_compressed_block_cols.push_back(0);
-  expected_compressed_block_cols.push_back(2);
-  expected_compressed_block_cols.push_back(4);
-  expected_compressed_block_cols.push_back(5);
-  expected_compressed_block_cols.push_back(6);
+  tsm.set_num_nonzeros(offset);
 
-  vector<int> compressed_block_rows;
-  vector<int> compressed_block_cols;
-  CompressedColumnScalarMatrixToBlockMatrix(sparse_matrix.innerIndexPtr(),
-                                            sparse_matrix.outerIndexPtr(),
-                                            row_blocks,
-                                            col_blocks,
-                                            &compressed_block_rows,
-                                            &compressed_block_cols);
+  SuiteSparse ss;
+  scoped_ptr<cholmod_sparse> ccsm(ss.CreateSparseMatrix(&tsm));
 
-  EXPECT_EQ(compressed_block_rows, expected_compressed_block_rows);
-  EXPECT_EQ(compressed_block_cols, expected_compressed_block_cols);
+  vector<int> expected_block_rows;
+  expected_block_rows.push_back(0);
+  expected_block_rows.push_back(2);
+  expected_block_rows.push_back(1);
+  expected_block_rows.push_back(2);
+  expected_block_rows.push_back(0);
+  expected_block_rows.push_back(1);
+
+  vector<int> expected_block_cols;
+  expected_block_cols.push_back(0);
+  expected_block_cols.push_back(2);
+  expected_block_cols.push_back(4);
+  expected_block_cols.push_back(5);
+  expected_block_cols.push_back(6);
+
+  vector<int> block_rows;
+  vector<int> block_cols;
+  CompressedColumnScalarMatrixToBlockMatrix(
+      reinterpret_cast<const int*>(ccsm->i),
+      reinterpret_cast<const int*>(ccsm->p),
+      row_blocks,
+      col_blocks,
+      &block_rows,
+      &block_cols);
+
+  EXPECT_EQ(block_cols.size(), expected_block_cols.size());
+  EXPECT_EQ(block_rows.size(), expected_block_rows.size());
+
+  for (int i = 0; i < expected_block_cols.size(); ++i) {
+    EXPECT_EQ(block_cols[i], expected_block_cols[i]);
+  }
+
+  for (int i = 0; i < expected_block_rows.size(); ++i) {
+    EXPECT_EQ(block_rows[i], expected_block_rows[i]);
+  }
+
+  ss.Free(ccsm.release());
 }
 
 class SolveUpperTriangularTest : public ::testing::Test {
@@ -205,10 +234,13 @@ class SolveUpperTriangularTest : public ::testing::Test {
 
 TEST_F(SolveUpperTriangularTest, SolveInPlace) {
   double rhs_and_solution[] = {1.0, 1.0, 2.0, 2.0};
-  const double expected[] = {-1.4706, -1.0962, 6.6667, 2.2477};
+  const double expected[] = { -1.4706, -1.0962, 6.6667, 2.2477};
 
-  SolveUpperTriangularInPlace<int>(
-      cols.size() - 1, &rows[0], &cols[0], &values[0], rhs_and_solution);
+  SolveUpperTriangularInPlace<int>(cols.size() - 1,
+                                   &rows[0],
+                                   &cols[0],
+                                   &values[0],
+                                   rhs_and_solution);
 
   for (int i = 0; i < 4; ++i) {
     EXPECT_NEAR(rhs_and_solution[i], expected[i], 1e-4) << i;
@@ -217,10 +249,13 @@ TEST_F(SolveUpperTriangularTest, SolveInPlace) {
 
 TEST_F(SolveUpperTriangularTest, TransposeSolveInPlace) {
   double rhs_and_solution[] = {1.0, 1.0, 2.0, 2.0};
-  double expected[] = {1.970288, 1.242498, 6.081864, -0.057255};
+  double expected[] = {1.970288,  1.242498,  6.081864, -0.057255};
 
-  SolveUpperTriangularTransposeInPlace<int>(
-      cols.size() - 1, &rows[0], &cols[0], &values[0], rhs_and_solution);
+  SolveUpperTriangularTransposeInPlace<int>(cols.size() - 1,
+                                            &rows[0],
+                                            &cols[0],
+                                            &values[0],
+                                            rhs_and_solution);
 
   for (int i = 0; i < 4; ++i) {
     EXPECT_NEAR(rhs_and_solution[i], expected[i], 1e-4) << i;
@@ -229,16 +264,18 @@ TEST_F(SolveUpperTriangularTest, TransposeSolveInPlace) {
 
 TEST_F(SolveUpperTriangularTest, RTRSolveWithSparseRHS) {
   double solution[4];
-  // clang-format off
   double expected[] = { 6.8420e+00,   1.0057e+00,  -1.4907e-16,  -1.9335e+00,
                         1.0057e+00,   2.2275e+00,  -1.9493e+00,  -6.5693e-01,
-                        -1.4907e-16,  -1.9493e+00,   1.1111e+01,   9.7381e-17,
-                        -1.9335e+00,  -6.5693e-01,   9.7381e-17,   1.2631e+00 };
-  // clang-format on
+                       -1.4907e-16,  -1.9493e+00,   1.1111e+01,   9.7381e-17,
+                       -1.9335e+00,  -6.5693e-01,   9.7381e-17,   1.2631e+00 };
 
   for (int i = 0; i < 4; ++i) {
-    SolveRTRWithSparseRHS<int>(
-        cols.size() - 1, &rows[0], &cols[0], &values[0], i, solution);
+    SolveRTRWithSparseRHS<int>(cols.size() - 1,
+                               &rows[0],
+                               &cols[0],
+                               &values[0],
+                               i,
+                               solution);
     for (int j = 0; j < 4; ++j) {
       EXPECT_NEAR(solution[j], expected[4 * i + j], 1e-3) << i;
     }

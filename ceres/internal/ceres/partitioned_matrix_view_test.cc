@@ -30,12 +30,11 @@
 
 #include "ceres/partitioned_matrix_view.h"
 
-#include <memory>
 #include <vector>
-
 #include "ceres/block_structure.h"
 #include "ceres/casts.h"
 #include "ceres/internal/eigen.h"
+#include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_least_squares_problems.h"
 #include "ceres/random.h"
 #include "ceres/sparse_matrix.h"
@@ -48,12 +47,12 @@ namespace internal {
 const double kEpsilon = 1e-14;
 
 class PartitionedMatrixViewTest : public ::testing::Test {
- protected:
-  void SetUp() final {
+ protected :
+  virtual void SetUp() {
     srand(5);
-    std::unique_ptr<LinearLeastSquaresProblem> problem(
+    scoped_ptr<LinearLeastSquaresProblem> problem(
         CreateLinearLeastSquaresProblemFromId(2));
-    CHECK(problem != nullptr);
+    CHECK_NOTNULL(problem.get());
     A_.reset(problem->A.release());
 
     num_cols_ = A_->num_cols();
@@ -62,14 +61,15 @@ class PartitionedMatrixViewTest : public ::testing::Test {
     LinearSolver::Options options;
     options.elimination_groups.push_back(num_eliminate_blocks_);
     pmv_.reset(PartitionedMatrixViewBase::Create(
-        options, *down_cast<BlockSparseMatrix*>(A_.get())));
+                   options,
+                   *down_cast<BlockSparseMatrix*>(A_.get())));
   }
 
   int num_rows_;
   int num_cols_;
   int num_eliminate_blocks_;
-  std::unique_ptr<SparseMatrix> A_;
-  std::unique_ptr<PartitionedMatrixViewBase> pmv_;
+  scoped_ptr<SparseMatrix> A_;
+  scoped_ptr<PartitionedMatrixViewBase> pmv_;
 };
 
 TEST_F(PartitionedMatrixViewTest, DimensionsTest) {
@@ -143,9 +143,9 @@ TEST_F(PartitionedMatrixViewTest, LeftMultiply) {
 }
 
 TEST_F(PartitionedMatrixViewTest, BlockDiagonalEtE) {
-  std::unique_ptr<BlockSparseMatrix> block_diagonal_ee(
-      pmv_->CreateBlockDiagonalEtE());
-  const CompressedRowBlockStructure* bs = block_diagonal_ee->block_structure();
+  scoped_ptr<BlockSparseMatrix>
+      block_diagonal_ee(pmv_->CreateBlockDiagonalEtE());
+  const CompressedRowBlockStructure* bs  = block_diagonal_ee->block_structure();
 
   EXPECT_EQ(block_diagonal_ee->num_rows(), 2);
   EXPECT_EQ(block_diagonal_ee->num_cols(), 2);
@@ -157,9 +157,9 @@ TEST_F(PartitionedMatrixViewTest, BlockDiagonalEtE) {
 }
 
 TEST_F(PartitionedMatrixViewTest, BlockDiagonalFtF) {
-  std::unique_ptr<BlockSparseMatrix> block_diagonal_ff(
-      pmv_->CreateBlockDiagonalFtF());
-  const CompressedRowBlockStructure* bs = block_diagonal_ff->block_structure();
+  scoped_ptr<BlockSparseMatrix>
+      block_diagonal_ff(pmv_->CreateBlockDiagonalFtF());
+  const CompressedRowBlockStructure* bs  = block_diagonal_ff->block_structure();
 
   EXPECT_EQ(block_diagonal_ff->num_rows(), 3);
   EXPECT_EQ(block_diagonal_ff->num_cols(), 3);

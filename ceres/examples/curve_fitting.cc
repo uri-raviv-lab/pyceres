@@ -34,8 +34,8 @@
 using ceres::AutoDiffCostFunction;
 using ceres::CostFunction;
 using ceres::Problem;
-using ceres::Solve;
 using ceres::Solver;
+using ceres::Solve;
 
 // Data generated using the following octave code.
 //   randn('seed', 23497);
@@ -48,7 +48,6 @@ using ceres::Solver;
 //   data = [x', y_observed'];
 
 const int kNumObservations = 67;
-// clang-format off
 const double data[] = {
   0.000000e+00, 1.133898e+00,
   7.500000e-02, 1.334902e+00,
@@ -118,14 +117,15 @@ const double data[] = {
   4.875000e+00, 4.727863e+00,
   4.950000e+00, 4.669206e+00,
 };
-// clang-format on
 
 struct ExponentialResidual {
-  ExponentialResidual(double x, double y) : x_(x), y_(y) {}
+  ExponentialResidual(double x, double y)
+      : x_(x), y_(y) {}
 
-  template <typename T>
-  bool operator()(const T* const m, const T* const c, T* residual) const {
-    residual[0] = y_ - exp(m[0] * x_ + c[0]);
+  template <typename T> bool operator()(const T* const m,
+                                        const T* const c,
+                                        T* residual) const {
+    residual[0] = T(y_) - exp(m[0] * T(x_) + c[0]);
     return true;
   }
 
@@ -146,8 +146,7 @@ int main(int argc, char** argv) {
         new AutoDiffCostFunction<ExponentialResidual, 1, 1, 1>(
             new ExponentialResidual(data[2 * i], data[2 * i + 1])),
         NULL,
-        &m,
-        &c);
+        &m, &c);
   }
 
   Solver::Options options;

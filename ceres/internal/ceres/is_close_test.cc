@@ -31,7 +31,6 @@
 // This file contains tests for the IsClose function.
 
 #include "ceres/is_close.h"
-
 #include "gtest/gtest.h"
 
 namespace ceres {

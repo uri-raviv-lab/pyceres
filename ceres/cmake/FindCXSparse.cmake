@@ -120,27 +120,6 @@ if (MSVC)
   set(CMAKE_FIND_LIBRARY_PREFIXES "lib" "" "${CMAKE_FIND_LIBRARY_PREFIXES}")
 endif (MSVC)
 
-# On macOS, add the Homebrew prefix (with appropriate suffixes) to the
-# respective HINTS directories (after any user-specified locations).  This
-# handles Homebrew installations into non-standard locations (not /usr/local).
-# We do not use CMAKE_PREFIX_PATH for this as given the search ordering of
-# find_xxx(), doing so would override any user-specified HINTS locations with
-# the Homebrew version if it exists.
-if (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-  find_program(HOMEBREW_EXECUTABLE brew)
-  mark_as_advanced(FORCE HOMEBREW_EXECUTABLE)
-  if (HOMEBREW_EXECUTABLE)
-    # Detected a Homebrew install, query for its install prefix.
-    execute_process(COMMAND ${HOMEBREW_EXECUTABLE} --prefix
-      OUTPUT_VARIABLE HOMEBREW_INSTALL_PREFIX
-      OUTPUT_STRIP_TRAILING_WHITESPACE)
-    message(STATUS "Detected Homebrew with install prefix: "
-      "${HOMEBREW_INSTALL_PREFIX}, adding to CMake search paths.")
-    list(APPEND CXSPARSE_INCLUDE_DIR_HINTS "${HOMEBREW_INSTALL_PREFIX}/include")
-    list(APPEND CXSPARSE_LIBRARY_DIR_HINTS "${HOMEBREW_INSTALL_PREFIX}/lib")
-  endif()
-endif()
-
 # Search user-installed locations first, so that we prefer user installs
 # to system installs where both exist.
 #
@@ -156,16 +135,12 @@ list(APPEND CXSPARSE_CHECK_LIBRARY_DIRS
   /usr/local/homebrew/lib # Mac OS X.
   /opt/local/lib
   /usr/lib)
-# Additional suffixes to try appending to each search path.
-list(APPEND CXSPARSE_CHECK_PATH_SUFFIXES
-  suitesparse) # Linux/Windows
 
 # Search supplied hint directories first if supplied.
 find_path(CXSPARSE_INCLUDE_DIR
   NAMES cs.h
-  HINTS ${CXSPARSE_INCLUDE_DIR_HINTS}
-  PATHS ${CXSPARSE_CHECK_INCLUDE_DIRS}
-  PATH_SUFFIXES ${CXSPARSE_CHECK_PATH_SUFFIXES})
+  PATHS ${CXSPARSE_INCLUDE_DIR_HINTS}
+  ${CXSPARSE_CHECK_INCLUDE_DIRS})
 if (NOT CXSPARSE_INCLUDE_DIR OR
     NOT EXISTS ${CXSPARSE_INCLUDE_DIR})
   cxsparse_report_not_found(
@@ -175,9 +150,8 @@ endif (NOT CXSPARSE_INCLUDE_DIR OR
        NOT EXISTS ${CXSPARSE_INCLUDE_DIR})
 
 find_library(CXSPARSE_LIBRARY NAMES cxsparse
-  HINTS ${CXSPARSE_LIBRARY_DIR_HINTS}
-  PATHS ${CXSPARSE_CHECK_LIBRARY_DIRS}
-  PATH_SUFFIXES ${CXSPARSE_CHECK_PATH_SUFFIXES})
+  PATHS ${CXSPARSE_LIBRARY_DIR_HINTS}
+  ${CXSPARSE_CHECK_LIBRARY_DIRS})
 if (NOT CXSPARSE_LIBRARY OR
     NOT EXISTS ${CXSPARSE_LIBRARY})
   cxsparse_report_not_found(

@@ -46,9 +46,9 @@ class QuadraticTestFunction : public ceres::FirstOrderFunction {
     }
   }
 
-  bool Evaluate(const double* parameters,
-                double* cost,
-                double* gradient) const final {
+  virtual bool Evaluate(const double* parameters,
+                        double* cost,
+                        double* gradient) const {
     const double x = parameters[0];
     cost[0] = x * x;
     if (gradient != NULL) {
@@ -57,7 +57,7 @@ class QuadraticTestFunction : public ceres::FirstOrderFunction {
     return true;
   }
 
-  int NumParameters() const final { return 1; }
+  virtual int NumParameters() const { return 1; }
 
  private:
   bool* flag_to_set_on_destruction_;
@@ -65,7 +65,9 @@ class QuadraticTestFunction : public ceres::FirstOrderFunction {
 
 TEST(GradientProblem, TakesOwnershipOfFirstOrderFunction) {
   bool is_destructed = false;
-  { ceres::GradientProblem problem(new QuadraticTestFunction(&is_destructed)); }
+  {
+    ceres::GradientProblem problem(new QuadraticTestFunction(&is_destructed));
+  }
   EXPECT_TRUE(is_destructed);
 }
 

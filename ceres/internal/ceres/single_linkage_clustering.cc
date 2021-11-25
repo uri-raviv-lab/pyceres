@@ -28,12 +28,15 @@
 //
 // Author: sameeragarwal@google.com (Sameer Agarwal)
 
+// This include must come before any #ifndef check on Ceres compile options.
+#include "ceres/internal/port.h"
+
+#ifndef CERES_NO_SUITESPARSE
+
 #include "ceres/single_linkage_clustering.h"
 
-#include <unordered_map>
-#include <unordered_set>
-
 #include "ceres/graph.h"
+#include "ceres/collections_port.h"
 #include "ceres/graph_algorithms.h"
 
 namespace ceres {
@@ -42,19 +45,27 @@ namespace internal {
 int ComputeSingleLinkageClustering(
     const SingleLinkageClusteringOptions& options,
     const WeightedGraph<int>& graph,
-    std::unordered_map<int, int>* membership) {
-  CHECK(membership != nullptr);
-  membership->clear();
+    HashMap<int, int>* membership) {
+  CHECK_NOTNULL(membership)->clear();
 
   // Initially each vertex is in its own cluster.
-  const std::unordered_set<int>& vertices = graph.vertices();
-  for (const int v : vertices) {
-    (*membership)[v] = v;
+  const HashSet<int>& vertices = graph.vertices();
+  for (HashSet<int>::const_iterator it = vertices.begin();
+       it != vertices.end();
+       ++it) {
+    (*membership)[*it] = *it;
   }
 
-  for (const int vertex1 : vertices) {
-    const std::unordered_set<int>& neighbors = graph.Neighbors(vertex1);
-    for (const int vertex2 : neighbors) {
+  for (HashSet<int>::const_iterator it1 = vertices.begin();
+       it1 != vertices.end();
+       ++it1) {
+    const int vertex1 = *it1;
+    const HashSet<int>& neighbors = graph.Neighbors(vertex1);
+    for (HashSet<int>::const_iterator it2 = neighbors.begin();
+         it2 != neighbors.end();
+         ++it2) {
+      const int vertex2 = *it2;
+
       // Since the graph is undirected, only pay attention to one side
       // of the edge and ignore weak edges.
       if ((vertex1 > vertex2) ||
@@ -81,9 +92,11 @@ int ComputeSingleLinkageClustering(
   // Make sure that every vertex is connected directly to the vertex
   // identifying the cluster.
   int num_clusters = 0;
-  for (auto& m : *membership) {
-    m.second = FindConnectedComponent(m.first, membership);
-    if (m.first == m.second) {
+  for (HashMap<int, int>::iterator it = membership->begin();
+       it != membership->end();
+       ++it) {
+    it->second = FindConnectedComponent(it->first, membership);
+    if (it->first == it->second) {
       ++num_clusters;
     }
   }
@@ -93,3 +106,5 @@ int ComputeSingleLinkageClustering(
 
 }  // namespace internal
 }  // namespace ceres
+
+#endif  // CERES_NO_SUITESPARSE

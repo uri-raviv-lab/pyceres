@@ -28,13 +28,11 @@
 //
 // Author: moll.markus@arcor.de (Markus Moll)
 
-#include "ceres/dogleg_strategy.h"
-
 #include <limits>
-#include <memory>
-
-#include "ceres/dense_qr_solver.h"
 #include "ceres/internal/eigen.h"
+#include "ceres/internal/scoped_ptr.h"
+#include "ceres/dense_qr_solver.h"
+#include "ceres/dogleg_strategy.h"
 #include "ceres/linear_solver.h"
 #include "ceres/trust_region_strategy.h"
 #include "glog/logging.h"
@@ -46,7 +44,7 @@ namespace {
 
 class Fixture : public testing::Test {
  protected:
-  std::unique_ptr<DenseSparseMatrix> jacobian_;
+  scoped_ptr<DenseSparseMatrix> jacobian_;
   Vector residual_;
   Vector x_;
   TrustRegionStrategy::Options options_;
@@ -62,17 +60,15 @@ class Fixture : public testing::Test {
 // from the origin.
 class DoglegStrategyFixtureEllipse : public Fixture {
  protected:
-  void SetUp() final {
+  virtual void SetUp() {
     Matrix basis(6, 6);
     // The following lines exceed 80 characters for better readability.
-    // clang-format off
     basis << -0.1046920933796121, -0.7449367449921986, -0.4190744502875876, -0.4480450716142566,  0.2375351607929440, -0.0363053418882862,  // NOLINT
               0.4064975684355914,  0.2681113508511354, -0.7463625494601520, -0.0803264850508117, -0.4463149623021321,  0.0130224954867195,  // NOLINT
              -0.5514387729089798,  0.1026621026168657, -0.5008316122125011,  0.5738122212666414,  0.2974664724007106,  0.1296020877535158,  // NOLINT
               0.5037835370947156,  0.2668479925183712, -0.1051754618492798, -0.0272739396578799,  0.7947481647088278, -0.1776623363955670,  // NOLINT
              -0.4005458426625444,  0.2939330589634109, -0.0682629380550051, -0.2895448882503687, -0.0457239396341685, -0.8139899477847840,  // NOLINT
              -0.3247764582762654,  0.4528151365941945, -0.0276683863102816, -0.6155994592510784,  0.1489240599972848,  0.5362574892189350;  // NOLINT
-    // clang-format on
 
     Vector Ddiag(6);
     Ddiag << 1.0, 2.0, 4.0, 8.0, 16.0, 32.0;
@@ -102,7 +98,7 @@ class DoglegStrategyFixtureEllipse : public Fixture {
 // The gradient at the origin points towards the global minimum.
 class DoglegStrategyFixtureValley : public Fixture {
  protected:
-  void SetUp() final {
+  virtual void SetUp() {
     Vector Ddiag(6);
     Ddiag << 1.0, 2.0, 4.0, 8.0, 16.0, 32.0;
 
@@ -130,7 +126,7 @@ const double kEpsilon = std::numeric_limits<double>::epsilon();
 // The DoglegStrategy must never return a step that is longer than the current
 // trust region radius.
 TEST_F(DoglegStrategyFixtureEllipse, TrustRegionObeyedTraditional) {
-  std::unique_ptr<LinearSolver> linear_solver(
+  scoped_ptr<LinearSolver> linear_solver(
       new DenseQRSolver(LinearSolver::Options()));
   options_.linear_solver = linear_solver.get();
   // The global minimum is at (1, 1, ..., 1), so the distance to it is
@@ -143,15 +139,17 @@ TEST_F(DoglegStrategyFixtureEllipse, TrustRegionObeyedTraditional) {
   DoglegStrategy strategy(options_);
   TrustRegionStrategy::PerSolveOptions pso;
 
-  TrustRegionStrategy::Summary summary =
-      strategy.ComputeStep(pso, jacobian_.get(), residual_.data(), x_.data());
+  TrustRegionStrategy::Summary summary = strategy.ComputeStep(pso,
+                                                              jacobian_.get(),
+                                                              residual_.data(),
+                                                              x_.data());
 
   EXPECT_NE(summary.termination_type, LINEAR_SOLVER_FAILURE);
   EXPECT_LE(x_.norm(), options_.initial_radius * (1.0 + 4.0 * kEpsilon));
 }
 
 TEST_F(DoglegStrategyFixtureEllipse, TrustRegionObeyedSubspace) {
-  std::unique_ptr<LinearSolver> linear_solver(
+  scoped_ptr<LinearSolver> linear_solver(
       new DenseQRSolver(LinearSolver::Options()));
   options_.linear_solver = linear_solver.get();
   options_.dogleg_type = SUBSPACE_DOGLEG;
@@ -161,15 +159,17 @@ TEST_F(DoglegStrategyFixtureEllipse, TrustRegionObeyedSubspace) {
   DoglegStrategy strategy(options_);
   TrustRegionStrategy::PerSolveOptions pso;
 
-  TrustRegionStrategy::Summary summary =
-      strategy.ComputeStep(pso, jacobian_.get(), residual_.data(), x_.data());
+  TrustRegionStrategy::Summary summary = strategy.ComputeStep(pso,
+                                                              jacobian_.get(),
+                                                              residual_.data(),
+                                                              x_.data());
 
   EXPECT_NE(summary.termination_type, LINEAR_SOLVER_FAILURE);
   EXPECT_LE(x_.norm(), options_.initial_radius * (1.0 + 4.0 * kEpsilon));
 }
 
 TEST_F(DoglegStrategyFixtureEllipse, CorrectGaussNewtonStep) {
-  std::unique_ptr<LinearSolver> linear_solver(
+  scoped_ptr<LinearSolver> linear_solver(
       new DenseQRSolver(LinearSolver::Options()));
   options_.linear_solver = linear_solver.get();
   options_.dogleg_type = SUBSPACE_DOGLEG;
@@ -179,8 +179,10 @@ TEST_F(DoglegStrategyFixtureEllipse, CorrectGaussNewtonStep) {
   DoglegStrategy strategy(options_);
   TrustRegionStrategy::PerSolveOptions pso;
 
-  TrustRegionStrategy::Summary summary =
-      strategy.ComputeStep(pso, jacobian_.get(), residual_.data(), x_.data());
+  TrustRegionStrategy::Summary summary = strategy.ComputeStep(pso,
+                                                              jacobian_.get(),
+                                                              residual_.data(),
+                                                              x_.data());
 
   EXPECT_NE(summary.termination_type, LINEAR_SOLVER_FAILURE);
   EXPECT_NEAR(x_(0), 1.0, kToleranceLoose);
@@ -194,7 +196,7 @@ TEST_F(DoglegStrategyFixtureEllipse, CorrectGaussNewtonStep) {
 // Test if the subspace basis is a valid orthonormal basis of the space spanned
 // by the gradient and the Gauss-Newton point.
 TEST_F(DoglegStrategyFixtureEllipse, ValidSubspaceBasis) {
-  std::unique_ptr<LinearSolver> linear_solver(
+  scoped_ptr<LinearSolver> linear_solver(
       new DenseQRSolver(LinearSolver::Options()));
   options_.linear_solver = linear_solver.get();
   options_.dogleg_type = SUBSPACE_DOGLEG;
@@ -214,20 +216,22 @@ TEST_F(DoglegStrategyFixtureEllipse, ValidSubspaceBasis) {
 
   // Check if the gradient projects onto itself.
   const Vector gradient = strategy.gradient();
-  EXPECT_NEAR((gradient - basis * (basis.transpose() * gradient)).norm(),
+  EXPECT_NEAR((gradient - basis*(basis.transpose()*gradient)).norm(),
               0.0,
               kTolerance);
 
   // Check if the Gauss-Newton point projects onto itself.
   const Vector gn = strategy.gauss_newton_step();
-  EXPECT_NEAR((gn - basis * (basis.transpose() * gn)).norm(), 0.0, kTolerance);
+  EXPECT_NEAR((gn - basis*(basis.transpose()*gn)).norm(),
+              0.0,
+              kTolerance);
 }
 
 // Test if the step is correct if the gradient and the Gauss-Newton step point
 // in the same direction and the Gauss-Newton step is outside the trust region,
 // i.e. the trust region is active.
 TEST_F(DoglegStrategyFixtureValley, CorrectStepLocalOptimumAlongGradient) {
-  std::unique_ptr<LinearSolver> linear_solver(
+  scoped_ptr<LinearSolver> linear_solver(
       new DenseQRSolver(LinearSolver::Options()));
   options_.linear_solver = linear_solver.get();
   options_.dogleg_type = SUBSPACE_DOGLEG;
@@ -237,8 +241,10 @@ TEST_F(DoglegStrategyFixtureValley, CorrectStepLocalOptimumAlongGradient) {
   DoglegStrategy strategy(options_);
   TrustRegionStrategy::PerSolveOptions pso;
 
-  TrustRegionStrategy::Summary summary =
-      strategy.ComputeStep(pso, jacobian_.get(), residual_.data(), x_.data());
+  TrustRegionStrategy::Summary summary = strategy.ComputeStep(pso,
+                                                              jacobian_.get(),
+                                                              residual_.data(),
+                                                              x_.data());
 
   EXPECT_NE(summary.termination_type, LINEAR_SOLVER_FAILURE);
   EXPECT_NEAR(x_(0), 0.0, kToleranceLoose);
@@ -253,7 +259,7 @@ TEST_F(DoglegStrategyFixtureValley, CorrectStepLocalOptimumAlongGradient) {
 // in the same direction and the Gauss-Newton step is inside the trust region,
 // i.e. the trust region is inactive.
 TEST_F(DoglegStrategyFixtureValley, CorrectStepGlobalOptimumAlongGradient) {
-  std::unique_ptr<LinearSolver> linear_solver(
+  scoped_ptr<LinearSolver> linear_solver(
       new DenseQRSolver(LinearSolver::Options()));
   options_.linear_solver = linear_solver.get();
   options_.dogleg_type = SUBSPACE_DOGLEG;
@@ -263,8 +269,10 @@ TEST_F(DoglegStrategyFixtureValley, CorrectStepGlobalOptimumAlongGradient) {
   DoglegStrategy strategy(options_);
   TrustRegionStrategy::PerSolveOptions pso;
 
-  TrustRegionStrategy::Summary summary =
-      strategy.ComputeStep(pso, jacobian_.get(), residual_.data(), x_.data());
+  TrustRegionStrategy::Summary summary = strategy.ComputeStep(pso,
+                                                              jacobian_.get(),
+                                                              residual_.data(),
+                                                              x_.data());
 
   EXPECT_NE(summary.termination_type, LINEAR_SOLVER_FAILURE);
   EXPECT_NEAR(x_(0), 0.0, kToleranceLoose);

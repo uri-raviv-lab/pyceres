@@ -34,19 +34,18 @@
 
 #include "ceres/dense_sparse_matrix.h"
 
-#include <memory>
-
 #include "ceres/casts.h"
-#include "ceres/internal/eigen.h"
 #include "ceres/linear_least_squares_problems.h"
 #include "ceres/triplet_sparse_matrix.h"
+#include "ceres/internal/eigen.h"
+#include "ceres/internal/scoped_ptr.h"
 #include "glog/logging.h"
 #include "gtest/gtest.h"
 
 namespace ceres {
 namespace internal {
 
-static void CompareMatrices(const SparseMatrix* a, const SparseMatrix* b) {
+void CompareMatrices(const SparseMatrix* a, const SparseMatrix* b) {
   EXPECT_EQ(a->num_rows(), b->num_rows());
   EXPECT_EQ(a->num_cols(), b->num_cols());
 
@@ -68,12 +67,12 @@ static void CompareMatrices(const SparseMatrix* a, const SparseMatrix* b) {
 }
 
 class DenseSparseMatrixTest : public ::testing::Test {
- protected:
-  void SetUp() final {
-    std::unique_ptr<LinearLeastSquaresProblem> problem(
+ protected :
+  virtual void SetUp() {
+    scoped_ptr<LinearLeastSquaresProblem> problem(
         CreateLinearLeastSquaresProblemFromId(1));
 
-    CHECK(problem != nullptr);
+    CHECK_NOTNULL(problem.get());
 
     tsm.reset(down_cast<TripletSparseMatrix*>(problem->A.release()));
     dsm.reset(new DenseSparseMatrix(*tsm));
@@ -85,8 +84,8 @@ class DenseSparseMatrixTest : public ::testing::Test {
   int num_rows;
   int num_cols;
 
-  std::unique_ptr<TripletSparseMatrix> tsm;
-  std::unique_ptr<DenseSparseMatrix> dsm;
+  scoped_ptr<TripletSparseMatrix> tsm;
+  scoped_ptr<DenseSparseMatrix> dsm;
 };
 
 TEST_F(DenseSparseMatrixTest, RightMultiply) {

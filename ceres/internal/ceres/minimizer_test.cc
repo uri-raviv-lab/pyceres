@@ -28,11 +28,10 @@
 //
 // Author: keir@google.com (Keir Mierle)
 
-#include "ceres/minimizer.h"
-
-#include "ceres/iteration_callback.h"
-#include "ceres/solver.h"
 #include "gtest/gtest.h"
+#include "ceres/iteration_callback.h"
+#include "ceres/minimizer.h"
+#include "ceres/solver.h"
 
 namespace ceres {
 namespace internal {
@@ -40,7 +39,7 @@ namespace internal {
 class FakeIterationCallback : public IterationCallback {
  public:
   virtual ~FakeIterationCallback() {}
-  CallbackReturnType operator()(const IterationSummary& summary) final {
+  virtual CallbackReturnType operator()(const IterationSummary& summary) {
     return SOLVER_CONTINUE;
   }
 };
@@ -63,7 +62,7 @@ TEST(Minimizer, InitializationCopiesCallbacks) {
 class AbortingIterationCallback : public IterationCallback {
  public:
   virtual ~AbortingIterationCallback() {}
-  CallbackReturnType operator()(const IterationSummary& summary) final {
+  virtual CallbackReturnType operator()(const IterationSummary& summary) {
     return SOLVER_ABORT;
   }
 };
@@ -81,7 +80,7 @@ TEST(Minimizer, UserAbortUpdatesSummaryMessage) {
 class SucceedingIterationCallback : public IterationCallback {
  public:
   virtual ~SucceedingIterationCallback() {}
-  CallbackReturnType operator()(const IterationSummary& summary) final {
+  virtual CallbackReturnType operator()(const IterationSummary& summary) {
     return SOLVER_TERMINATE_SUCCESSFULLY;
   }
 };

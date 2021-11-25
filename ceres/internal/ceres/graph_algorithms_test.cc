@@ -31,12 +31,11 @@
 #include "ceres/graph_algorithms.h"
 
 #include <algorithm>
-#include <memory>
-#include <unordered_set>
-
+#include "gtest/gtest.h"
+#include "ceres/collections_port.h"
 #include "ceres/graph.h"
 #include "ceres/internal/port.h"
-#include "gtest/gtest.h"
+#include "ceres/internal/scoped_ptr.h"
 
 namespace ceres {
 namespace internal {
@@ -111,10 +110,9 @@ TEST(Degree2MaximumSpanningForest, PreserveWeights) {
   graph.AddEdge(0, 1, 0.5);
   graph.AddEdge(1, 0, 0.5);
 
-  std::unique_ptr<WeightedGraph<int>> forest(
-      Degree2MaximumSpanningForest(graph));
+  scoped_ptr<WeightedGraph<int> > forest(Degree2MaximumSpanningForest(graph));
 
-  const std::unordered_set<int>& vertices = forest->vertices();
+  const HashSet<int>& vertices = forest->vertices();
   EXPECT_EQ(vertices.size(), 2);
   EXPECT_EQ(forest->VertexWeight(0), 1.0);
   EXPECT_EQ(forest->VertexWeight(1), 2.0);
@@ -135,37 +133,36 @@ TEST(Degree2MaximumSpanningForest, StarGraph) {
   graph.AddEdge(0, 3, 3.0);
   graph.AddEdge(0, 4, 4.0);
 
-  std::unique_ptr<WeightedGraph<int>> forest(
-      Degree2MaximumSpanningForest(graph));
-  const std::unordered_set<int>& vertices = forest->vertices();
+  scoped_ptr<WeightedGraph<int> > forest(Degree2MaximumSpanningForest(graph));
+  const HashSet<int>& vertices = forest->vertices();
   EXPECT_EQ(vertices.size(), 5);
 
   {
-    const std::unordered_set<int>& neighbors = forest->Neighbors(0);
+    const HashSet<int>& neighbors = forest->Neighbors(0);
     EXPECT_EQ(neighbors.size(), 2);
     EXPECT_TRUE(neighbors.find(4) != neighbors.end());
     EXPECT_TRUE(neighbors.find(3) != neighbors.end());
   }
 
   {
-    const std::unordered_set<int>& neighbors = forest->Neighbors(3);
+    const HashSet<int>& neighbors = forest->Neighbors(3);
     EXPECT_EQ(neighbors.size(), 1);
     EXPECT_TRUE(neighbors.find(0) != neighbors.end());
   }
 
   {
-    const std::unordered_set<int>& neighbors = forest->Neighbors(4);
+    const HashSet<int>& neighbors = forest->Neighbors(4);
     EXPECT_EQ(neighbors.size(), 1);
     EXPECT_TRUE(neighbors.find(0) != neighbors.end());
   }
 
   {
-    const std::unordered_set<int>& neighbors = forest->Neighbors(1);
+    const HashSet<int>& neighbors = forest->Neighbors(1);
     EXPECT_EQ(neighbors.size(), 0);
   }
 
   {
-    const std::unordered_set<int>& neighbors = forest->Neighbors(2);
+    const HashSet<int>& neighbors = forest->Neighbors(2);
     EXPECT_EQ(neighbors.size(), 0);
   }
 }
@@ -200,6 +197,7 @@ TEST(VertexTotalOrdering, TotalOrdering) {
     EXPECT_FALSE(less_than(3, i));
   }
 }
+
 
 TEST(StableIndependentSet, BreakTies) {
   Graph<int> graph;

@@ -28,10 +28,14 @@
 //
 // Author: Sameer Agarwal (sameeragarwal@google.com)
 
+// This include must come before any #ifndef check on Ceres compile options.
+#include "ceres/internal/port.h"
+
+#ifndef CERES_NO_SUITESPARSE
+
 #include "ceres/single_linkage_clustering.h"
 
-#include <unordered_map>
-
+#include "ceres/collections_port.h"
 #include "ceres/graph.h"
 #include "gtest/gtest.h"
 
@@ -53,7 +57,7 @@ TEST(SingleLinkageClustering, GraphHasTwoComponents) {
   graph.AddEdge(4, 5, 1.0);
 
   SingleLinkageClusteringOptions options;
-  std::unordered_map<int, int> membership;
+  HashMap<int, int> membership;
   ComputeSingleLinkageClustering(options, graph, &membership);
   EXPECT_EQ(membership.size(), kNumVertices);
 
@@ -82,7 +86,7 @@ TEST(SingleLinkageClustering, ComponentWithWeakLink) {
   graph.AddEdge(4, 5, 0.5);
 
   SingleLinkageClusteringOptions options;
-  std::unordered_map<int, int> membership;
+  HashMap<int, int> membership;
   ComputeSingleLinkageClustering(options, graph, &membership);
   EXPECT_EQ(membership.size(), kNumVertices);
 
@@ -112,7 +116,7 @@ TEST(SingleLinkageClustering, ComponentWithWeakLinkAndStrongLink) {
   graph.AddEdge(4, 5, 1.0);
 
   SingleLinkageClusteringOptions options;
-  std::unordered_map<int, int> membership;
+  HashMap<int, int> membership;
   ComputeSingleLinkageClustering(options, graph, &membership);
   EXPECT_EQ(membership.size(), kNumVertices);
 
@@ -124,3 +128,5 @@ TEST(SingleLinkageClustering, ComponentWithWeakLinkAndStrongLink) {
 
 }  // namespace internal
 }  // namespace ceres
+
+#endif  // CERES_NO_SUITESPARSE

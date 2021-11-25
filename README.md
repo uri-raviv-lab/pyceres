@@ -8,4 +8,4 @@ This package is in a pre-alpha state, and is mostly used for the development of 
 We will make this package more comprehensive, and include proper documentation when it's more mature.
 
 ## Current versions
-Eigen 3.4.0, ceres 2.0
+Eigen 3.4.0, ceres 1.12

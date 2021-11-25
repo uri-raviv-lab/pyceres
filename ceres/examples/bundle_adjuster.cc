@@ -64,9 +64,6 @@
 #include "glog/logging.h"
 #include "snavely_reprojection_error.h"
 
-// clang-format makes the gflags definitions too verbose
-// clang-format off
-
 DEFINE_string(input, "", "Input File name");
 DEFINE_string(trust_region_strategy, "levenberg_marquardt",
               "Options are: levenberg_marquardt, dogleg.");
@@ -77,7 +74,7 @@ DEFINE_bool(inner_iterations, false, "Use inner iterations to non-linearly "
             "refine each successful trust region step.");
 
 DEFINE_string(blocks_for_inner_iterations, "automatic", "Options are: "
-              "automatic, cameras, points, cameras,points, points,cameras");
+            "automatic, cameras, points, cameras,points, points,cameras");
 
 DEFINE_string(linear_solver, "sparse_schur", "Options are: "
               "sparse_schur, dense_schur, iterative_schur, sparse_normal_cholesky, "
@@ -103,8 +100,8 @@ DEFINE_bool(use_local_parameterization, false, "For quaternions, use a local "
 DEFINE_bool(robustify, false, "Use a robust loss function.");
 
 DEFINE_double(eta, 1e-2, "Default value for eta. Eta determines the "
-              "accuracy of each linear solve of the truncated newton step. "
-              "Changing this parameter can affect solve performance.");
+             "accuracy of each linear solve of the truncated newton step. "
+             "Changing this parameter can affect solve performance.");
 
 DEFINE_int32(num_threads, 1, "Number of threads.");
 DEFINE_int32(num_iterations, 5, "Number of iterations.");
@@ -123,17 +120,12 @@ DEFINE_int32(random_seed, 38401, "Random seed used to set the state "
              "the pertubations.");
 DEFINE_bool(line_search, false, "Use a line search instead of trust region "
             "algorithm.");
-DEFINE_bool(mixed_precision_solves, false, "Use mixed precision solves.");
-DEFINE_int32(max_num_refinement_iterations, 0, "Iterative refinement iterations");
 DEFINE_string(initial_ply, "", "Export the BAL file data as a PLY file.");
 DEFINE_string(final_ply, "", "Export the refined BAL file data as a PLY "
               "file.");
 
-// clang-format on
-
 namespace ceres {
 namespace examples {
-namespace {
 
 void SetLinearSolver(Solver::Options* options) {
   CHECK(StringToLinearSolverType(FLAGS_linear_solver,
@@ -143,14 +135,13 @@ void SetLinearSolver(Solver::Options* options) {
   CHECK(StringToVisibilityClusteringType(FLAGS_visibility_clustering,
                                          &options->visibility_clustering_type));
   CHECK(StringToSparseLinearAlgebraLibraryType(
-      FLAGS_sparse_linear_algebra_library,
-      &options->sparse_linear_algebra_library_type));
+            FLAGS_sparse_linear_algebra_library,
+            &options->sparse_linear_algebra_library_type));
   CHECK(StringToDenseLinearAlgebraLibraryType(
-      FLAGS_dense_linear_algebra_library,
-      &options->dense_linear_algebra_library_type));
+            FLAGS_dense_linear_algebra_library,
+            &options->dense_linear_algebra_library_type));
+  options->num_linear_solver_threads = FLAGS_num_threads;
   options->use_explicit_schur_complement = FLAGS_explicit_schur_complement;
-  options->use_mixed_precision_solves = FLAGS_mixed_precision_solves;
-  options->max_num_refinement_iterations = FLAGS_max_num_refinement_iterations;
 }
 
 void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
@@ -167,37 +158,31 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
       LOG(INFO) << "Camera blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_cameras; ++i) {
-        options->inner_iteration_ordering->AddElementToGroup(
-            cameras + camera_block_size * i, 0);
+        options->inner_iteration_ordering->AddElementToGroup(cameras + camera_block_size * i, 0);
       }
     } else if (FLAGS_blocks_for_inner_iterations == "points") {
       LOG(INFO) << "Point blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_points; ++i) {
-        options->inner_iteration_ordering->AddElementToGroup(
-            points + point_block_size * i, 0);
+        options->inner_iteration_ordering->AddElementToGroup(points + point_block_size * i, 0);
       }
     } else if (FLAGS_blocks_for_inner_iterations == "cameras,points") {
       LOG(INFO) << "Camera followed by point blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_cameras; ++i) {
-        options->inner_iteration_ordering->AddElementToGroup(
-            cameras + camera_block_size * i, 0);
+        options->inner_iteration_ordering->AddElementToGroup(cameras + camera_block_size * i, 0);
       }
       for (int i = 0; i < num_points; ++i) {
-        options->inner_iteration_ordering->AddElementToGroup(
-            points + point_block_size * i, 1);
+        options->inner_iteration_ordering->AddElementToGroup(points + point_block_size * i, 1);
       }
     } else if (FLAGS_blocks_for_inner_iterations == "points,cameras") {
       LOG(INFO) << "Point followed by camera blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_cameras; ++i) {
-        options->inner_iteration_ordering->AddElementToGroup(
-            cameras + camera_block_size * i, 1);
+        options->inner_iteration_ordering->AddElementToGroup(cameras + camera_block_size * i, 1);
       }
       for (int i = 0; i < num_points; ++i) {
-        options->inner_iteration_ordering->AddElementToGroup(
-            points + point_block_size * i, 0);
+        options->inner_iteration_ordering->AddElementToGroup(points + point_block_size * i, 0);
       }
     } else if (FLAGS_blocks_for_inner_iterations == "automatic") {
       LOG(INFO) << "Choosing automatic blocks for inner iterations";
@@ -222,7 +207,8 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
     return;
   }
 
-  ceres::ParameterBlockOrdering* ordering = new ceres::ParameterBlockOrdering;
+  ceres::ParameterBlockOrdering* ordering =
+      new ceres::ParameterBlockOrdering;
 
   // The points come before the cameras.
   for (int i = 0; i < num_points; ++i) {
@@ -276,11 +262,14 @@ void BuildProblem(BALProblem* bal_problem, Problem* problem) {
     CostFunction* cost_function;
     // Each Residual block takes a point and a camera as input and
     // outputs a 2 dimensional residual.
-    cost_function = (FLAGS_use_quaternions)
-                        ? SnavelyReprojectionErrorWithQuaternions::Create(
-                              observations[2 * i + 0], observations[2 * i + 1])
-                        : SnavelyReprojectionError::Create(
-                              observations[2 * i + 0], observations[2 * i + 1]);
+    cost_function =
+        (FLAGS_use_quaternions)
+        ? SnavelyReprojectionErrorWithQuaternions::Create(
+            observations[2 * i + 0],
+            observations[2 * i + 1])
+        : SnavelyReprojectionError::Create(
+            observations[2 * i + 0],
+            observations[2 * i + 1]);
 
     // If enabled use Huber's loss function.
     LossFunction* loss_function = FLAGS_robustify ? new HuberLoss(1.0) : NULL;
@@ -296,8 +285,9 @@ void BuildProblem(BALProblem* bal_problem, Problem* problem) {
 
   if (FLAGS_use_quaternions && FLAGS_use_local_parameterization) {
     LocalParameterization* camera_parameterization =
-        new ProductParameterization(new QuaternionParameterization(),
-                                    new IdentityParameterization(6));
+        new ProductParameterization(
+            new QuaternionParameterization(),
+            new IdentityParameterization(6));
     for (int i = 0; i < bal_problem->num_cameras(); ++i) {
       problem->SetParameterization(cameras + camera_block_size * i,
                                    camera_parameterization);
@@ -316,8 +306,9 @@ void SolveProblem(const char* filename) {
 
   srand(FLAGS_random_seed);
   bal_problem.Normalize();
-  bal_problem.Perturb(
-      FLAGS_rotation_sigma, FLAGS_translation_sigma, FLAGS_point_sigma);
+  bal_problem.Perturb(FLAGS_rotation_sigma,
+                      FLAGS_translation_sigma,
+                      FLAGS_point_sigma);
 
   BuildProblem(&bal_problem, &problem);
   Solver::Options options;
@@ -333,12 +324,11 @@ void SolveProblem(const char* filename) {
   }
 }
 
-}  // namespace
 }  // namespace examples
 }  // namespace ceres
 
 int main(int argc, char** argv) {
-  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+  CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
   if (FLAGS_input.empty()) {
     LOG(ERROR) << "Usage: bundle_adjuster --input=bal_problem";

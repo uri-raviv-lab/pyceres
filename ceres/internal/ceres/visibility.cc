@@ -28,19 +28,22 @@
 //
 // Author: kushalav@google.com (Avanish Kushal)
 
+// This include must come before any #ifndef check on Ceres compile options.
+#include "ceres/internal/port.h"
+
+#ifndef CERES_NO_SUITESPARSE
+
 #include "ceres/visibility.h"
 
-#include <algorithm>
 #include <cmath>
 #include <ctime>
+#include <algorithm>
 #include <set>
-#include <unordered_map>
-#include <utility>
 #include <vector>
-
+#include <utility>
 #include "ceres/block_structure.h"
+#include "ceres/collections_port.h"
 #include "ceres/graph.h"
-#include "ceres/pair_hash.h"
 #include "glog/logging.h"
 
 namespace ceres {
@@ -54,8 +57,8 @@ using std::vector;
 
 void ComputeVisibility(const CompressedRowBlockStructure& block_structure,
                        const int num_eliminate_blocks,
-                       vector<set<int>>* visibility) {
-  CHECK(visibility != nullptr);
+                       vector< set<int> >* visibility) {
+  CHECK_NOTNULL(visibility);
 
   // Clear the visibility vector and resize it to hold a
   // vector for each camera.
@@ -80,7 +83,7 @@ void ComputeVisibility(const CompressedRowBlockStructure& block_structure,
 }
 
 WeightedGraph<int>* CreateSchurComplementGraph(
-    const vector<set<int>>& visibility) {
+    const vector<set<int> >& visibility) {
   const time_t start_time = time(NULL);
   // Compute the number of e_blocks/point blocks. Since the visibility
   // set for each e_block/camera contains the set of e_blocks/points
@@ -97,20 +100,25 @@ WeightedGraph<int>* CreateSchurComplementGraph(
   // cameras. However, to compute the sparsity structure of the Schur
   // Complement efficiently, its better to have the point->camera
   // mapping.
-  vector<set<int>> inverse_visibility(num_points);
+  vector<set<int> > inverse_visibility(num_points);
   for (int i = 0; i < visibility.size(); i++) {
     const set<int>& visibility_set = visibility[i];
-    for (const int v : visibility_set) {
-      inverse_visibility[v].insert(i);
+    for (set<int>::const_iterator it = visibility_set.begin();
+         it != visibility_set.end();
+         ++it) {
+      inverse_visibility[*it].insert(i);
     }
   }
 
   // Map from camera pairs to number of points visible to both cameras
   // in the pair.
-  std::unordered_map<pair<int, int>, int, pair_hash> camera_pairs;
+  HashMap<pair<int, int>, int > camera_pairs;
 
   // Count the number of points visible to each camera/f_block pair.
-  for (const auto& inverse_visibility_set : inverse_visibility) {
+  for (vector<set<int> >::const_iterator it = inverse_visibility.begin();
+       it != inverse_visibility.end();
+       ++it) {
+    const set<int>& inverse_visibility_set = *it;
     for (set<int>::const_iterator camera1 = inverse_visibility_set.begin();
          camera1 != inverse_visibility_set.end();
          ++camera1) {
@@ -126,23 +134,25 @@ WeightedGraph<int>* CreateSchurComplementGraph(
   // Add vertices and initialize the pairs for self edges so that self
   // edges are guaranteed. This is needed for the Canonical views
   // algorithm to work correctly.
-  static constexpr double kSelfEdgeWeight = 1.0;
+  static const double kSelfEdgeWeight = 1.0;
   for (int i = 0; i < visibility.size(); ++i) {
     graph->AddVertex(i);
     graph->AddEdge(i, i, kSelfEdgeWeight);
   }
 
   // Add an edge for each camera pair.
-  for (const auto& camera_pair_count : camera_pairs) {
-    const int camera1 = camera_pair_count.first.first;
-    const int camera2 = camera_pair_count.first.second;
-    const int count = camera_pair_count.second;
-    DCHECK_NE(camera1, camera2);
+  for (HashMap<pair<int, int>, int>::const_iterator it = camera_pairs.begin();
+       it != camera_pairs.end();
+       ++it) {
+    const int camera1 = it->first.first;
+    const int camera2 = it->first.second;
+    CHECK_NE(camera1, camera2);
+
+    const int count = it->second;
     // Static cast necessary for Windows.
-    const double weight =
-        static_cast<double>(count) /
-        (sqrt(static_cast<double>(visibility[camera1].size() *
-                                  visibility[camera2].size())));
+    const double weight = static_cast<double>(count) /
+        (sqrt(static_cast<double>(
+                  visibility[camera1].size() * visibility[camera2].size())));
     graph->AddEdge(camera1, camera2, weight);
   }
 
@@ -152,3 +162,5 @@ WeightedGraph<int>* CreateSchurComplementGraph(
 
 }  // namespace internal
 }  // namespace ceres
+
+#endif  // CERES_NO_SUITESPARSE

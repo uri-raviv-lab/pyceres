@@ -35,11 +35,14 @@
 #ifndef CERES_INTERNAL_VISIBILITY_H_
 #define CERES_INTERNAL_VISIBILITY_H_
 
+// This include must come before any #ifndef check on Ceres compile options.
+#include "ceres/internal/port.h"
+
+#ifndef CERES_NO_SUITESPARSE
+
 #include <set>
 #include <vector>
-
 #include "ceres/graph.h"
-#include "ceres/internal/port.h"
 
 namespace ceres {
 namespace internal {
@@ -54,14 +57,13 @@ struct CompressedRowBlockStructure;
 //
 // In a structure from motion problem, e_blocks correspond to 3D
 // points and f_blocks correspond to cameras.
-CERES_EXPORT_INTERNAL void ComputeVisibility(
-    const CompressedRowBlockStructure& block_structure,
-    int num_eliminate_blocks,
-    std::vector<std::set<int>>* visibility);
+void ComputeVisibility(const CompressedRowBlockStructure& block_structure,
+                       int num_eliminate_blocks,
+                       std::vector<std::set<int> >* visibility);
 
 // Given f_block visibility as computed by the ComputeVisibility
 // function above, construct and return a graph whose vertices are
-// f_blocks and an edge connects two vertices if they have at least one
+// f_blocks and an edge connects two vertices if they have atleast one
 // e_block in common. The weight of this edge is normalized dot
 // product between the visibility vectors of the two
 // vertices/f_blocks.
@@ -72,10 +74,11 @@ CERES_EXPORT_INTERNAL void ComputeVisibility(
 //
 // Caller acquires ownership of the returned WeightedGraph pointer
 // (heap-allocated).
-CERES_EXPORT_INTERNAL WeightedGraph<int>* CreateSchurComplementGraph(
-    const std::vector<std::set<int>>& visibility);
+WeightedGraph<int>* CreateSchurComplementGraph(
+    const std::vector<std::set<int> >& visibility);
 
 }  // namespace internal
 }  // namespace ceres
 
+#endif  // CERES_NO_SUITESPARSE
 #endif  // CERES_INTERNAL_VISIBILITY_H_

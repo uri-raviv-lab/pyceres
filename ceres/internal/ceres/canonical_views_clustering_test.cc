@@ -29,10 +29,14 @@
 // Author: Sameer Agarwal (sameeragarwal@google.com)
 //         David Gallup (dgallup@google.com)
 
+// This include must come before any #ifndef check on Ceres compile options.
+#include "ceres/internal/port.h"
+
+#ifndef CERES_NO_SUITESPARSE
+
 #include "ceres/canonical_views_clustering.h"
 
-#include <unordered_map>
-
+#include "ceres/collections_port.h"
 #include "ceres/graph.h"
 #include "gtest/gtest.h"
 
@@ -42,7 +46,7 @@ namespace internal {
 const int kVertexIds[] = {0, 1, 2, 3};
 class CanonicalViewsTest : public ::testing::Test {
  protected:
-  void SetUp() final {
+  virtual void SetUp() {
     // The graph structure is as follows.
     //
     // Vertex weights:   0      2      2      0
@@ -75,7 +79,7 @@ class CanonicalViewsTest : public ::testing::Test {
 
   CanonicalViewsClusteringOptions options_;
   std::vector<int> centers_;
-  std::unordered_map<int, int> membership_;
+  HashMap<int, int> membership_;
 };
 
 TEST_F(CanonicalViewsTest, ComputeCanonicalViewsTest) {
@@ -111,6 +115,7 @@ TEST_F(CanonicalViewsTest, SizePenaltyTest) {
   EXPECT_EQ(centers_[0], kVertexIds[1]);
 }
 
+
 // Increases view score weight so vertex 2 will be chosen.
 TEST_F(CanonicalViewsTest, ViewScoreTest) {
   options_.min_views = 0;
@@ -141,3 +146,5 @@ TEST_F(CanonicalViewsTest, SimilarityPenaltyTest) {
 
 }  // namespace internal
 }  // namespace ceres
+
+#endif  // CERES_NO_SUITESPARSE

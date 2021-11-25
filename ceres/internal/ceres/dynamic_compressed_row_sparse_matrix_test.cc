@@ -30,11 +30,10 @@
 
 #include "ceres/dynamic_compressed_row_sparse_matrix.h"
 
-#include <memory>
-
 #include "ceres/casts.h"
 #include "ceres/compressed_row_sparse_matrix.h"
 #include "ceres/internal/eigen.h"
+#include "ceres/internal/scoped_ptr.h"
 #include "ceres/linear_least_squares_problems.h"
 #include "ceres/triplet_sparse_matrix.h"
 #include "gtest/gtest.h"
@@ -47,7 +46,7 @@ using std::vector;
 
 class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
  protected:
-  void SetUp() final {
+  virtual void SetUp() {
     num_rows = 7;
     num_cols = 4;
 
@@ -61,10 +60,14 @@ class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
     InitialiseDenseReference();
     InitialiseSparseMatrixReferences();
 
-    dcrsm.reset(new DynamicCompressedRowSparseMatrix(num_rows, num_cols, 0));
+    dcrsm.reset(new DynamicCompressedRowSparseMatrix(num_rows,
+                                                     num_cols,
+                                                     0));
   }
 
-  void Finalize() { dcrsm->Finalize(num_additional_elements); }
+  void Finalize() {
+    dcrsm->Finalize(num_additional_elements);
+  }
 
   void InitialiseDenseReference() {
     dense.resize(num_rows, num_cols);
@@ -93,8 +96,9 @@ class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
     }
     ASSERT_EQ(values.size(), expected_num_nonzeros);
 
-    tsm.reset(
-        new TripletSparseMatrix(num_rows, num_cols, expected_num_nonzeros));
+    tsm.reset(new TripletSparseMatrix(num_rows,
+                                      num_cols,
+                                      expected_num_nonzeros));
     copy(rows.begin(), rows.end(), tsm->mutable_rows());
     copy(cols.begin(), cols.end(), tsm->mutable_cols());
     copy(values.begin(), values.end(), tsm->mutable_values());
@@ -104,7 +108,7 @@ class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
     tsm->ToDenseMatrix(&dense_from_tsm);
     ASSERT_TRUE((dense.array() == dense_from_tsm.array()).all());
 
-    crsm.reset(CompressedRowSparseMatrix::FromTripletSparseMatrix(*tsm));
+    crsm.reset(new CompressedRowSparseMatrix(*tsm));
     Matrix dense_from_crsm;
     crsm->ToDenseMatrix(&dense_from_crsm);
     ASSERT_TRUE((dense.array() == dense_from_crsm.array()).all());
@@ -163,10 +167,10 @@ class DynamicCompressedRowSparseMatrixTest : public ::testing::Test {
   int expected_num_nonzeros;
 
   Matrix dense;
-  std::unique_ptr<TripletSparseMatrix> tsm;
-  std::unique_ptr<CompressedRowSparseMatrix> crsm;
+  scoped_ptr<TripletSparseMatrix> tsm;
+  scoped_ptr<CompressedRowSparseMatrix> crsm;
 
-  std::unique_ptr<DynamicCompressedRowSparseMatrix> dcrsm;
+  scoped_ptr<DynamicCompressedRowSparseMatrix> dcrsm;
 };
 
 TEST_F(DynamicCompressedRowSparseMatrixTest, Initialization) {

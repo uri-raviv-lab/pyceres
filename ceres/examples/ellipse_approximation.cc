@@ -37,7 +37,6 @@
 
 #include <cmath>
 #include <vector>
-
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 
@@ -54,7 +53,6 @@
 
 const int kYRows = 212;
 const int kYCols = 2;
-// clang-format off
 const double kYData[kYRows * kYCols] = {
   +3.871364e+00, +9.916027e-01,
   +3.864003e+00, +1.034148e+00,
@@ -269,13 +267,12 @@ const double kYData[kYRows * kYCols] = {
   +3.870542e+00, +9.996121e-01,
   +3.865424e+00, +1.028474e+00
 };
-// clang-format on
 ceres::ConstMatrixRef kY(kYData, kYRows, kYCols);
 
 class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
  public:
   PointToLineSegmentContourCostFunction(const int num_segments,
-                                        const Eigen::Vector2d& y)
+                                        const Eigen::Vector2d y)
       : num_segments_(num_segments), y_(y) {
     // The first parameter is the preimage position.
     mutable_parameter_block_sizes()->push_back(1);
@@ -326,12 +323,12 @@ class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
   }
 
   static ceres::CostFunction* Create(const int num_segments,
-                                     const Eigen::Vector2d& y) {
+                                     const Eigen::Vector2d y) {
     return new PointToLineSegmentContourCostFunction(num_segments, y);
   }
 
  private:
-  inline double ModuloNumSegments(const double t) const {
+  inline double ModuloNumSegments(const double& t) const {
     return t - num_segments_ * floor(t / num_segments_);
   }
 
@@ -339,19 +336,18 @@ class PointToLineSegmentContourCostFunction : public ceres::CostFunction {
   const Eigen::Vector2d y_;
 };
 
-class EuclideanDistanceFunctor {
- public:
-  explicit EuclideanDistanceFunctor(const double& sqrt_weight)
+struct EuclideanDistanceFunctor {
+  EuclideanDistanceFunctor(const double& sqrt_weight)
       : sqrt_weight_(sqrt_weight) {}
 
   template <typename T>
   bool operator()(const T* x0, const T* x1, T* residuals) const {
-    residuals[0] = sqrt_weight_ * (x0[0] - x1[0]);
-    residuals[1] = sqrt_weight_ * (x0[1] - x1[1]);
+    residuals[0] = T(sqrt_weight_) * (x0[0] - x1[0]);
+    residuals[1] = T(sqrt_weight_) * (x0[1] - x1[1]);
     return true;
   }
 
-  static ceres::CostFunction* Create(const double sqrt_weight) {
+  static ceres::CostFunction* Create(const double& sqrt_weight) {
     return new ceres::AutoDiffCostFunction<EuclideanDistanceFunctor, 2, 2, 2>(
         new EuclideanDistanceFunctor(sqrt_weight));
   }
@@ -360,9 +356,9 @@ class EuclideanDistanceFunctor {
   const double sqrt_weight_;
 };
 
-static bool SolveWithFullReport(ceres::Solver::Options options,
-                                ceres::Problem* problem,
-                                bool dynamic_sparsity) {
+bool SolveWithFullReport(ceres::Solver::Options options,
+                         ceres::Problem* problem,
+                         bool dynamic_sparsity) {
   options.dynamic_sparsity = dynamic_sparsity;
 
   ceres::Solver::Summary summary;
@@ -385,8 +381,9 @@ int main(int argc, char** argv) {
 
   // Eigen::MatrixXd is column major so we define our own MatrixXd which is
   // row major. Eigen::VectorXd can be used directly.
-  typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>
-      MatrixXd;
+  typedef Eigen::Matrix<double,
+                        Eigen::Dynamic, Eigen::Dynamic,
+                        Eigen::RowMajor> MatrixXd;
   using Eigen::VectorXd;
 
   // `X` is the matrix of control points which make up the contour of line
@@ -422,18 +419,18 @@ int main(int argc, char** argv) {
   for (int i = 0; i < num_observations; ++i) {
     parameter_blocks[0] = &t[i];
     problem.AddResidualBlock(
-        PointToLineSegmentContourCostFunction::Create(num_segments, kY.row(i)),
-        NULL,
-        parameter_blocks);
+      PointToLineSegmentContourCostFunction::Create(num_segments, kY.row(i)),
+      NULL,
+      parameter_blocks);
   }
 
   // Add regularization to minimize the length of the line segment contour.
   for (int i = 0; i < num_segments; ++i) {
     problem.AddResidualBlock(
-        EuclideanDistanceFunctor::Create(sqrt(regularization_weight)),
-        NULL,
-        X.data() + 2 * i,
-        X.data() + 2 * ((i + 1) % num_segments));
+      EuclideanDistanceFunctor::Create(sqrt(regularization_weight)),
+      NULL,
+      X.data() + 2 * i,
+      X.data() + 2 * ((i + 1) % num_segments));
   }
 
   ceres::Solver::Options options;

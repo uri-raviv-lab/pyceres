@@ -33,21 +33,20 @@
 // Minimize 0.5 (10 - x)^2 using analytic jacobian matrix.
 
 #include <vector>
-
 #include "ceres/ceres.h"
 #include "glog/logging.h"
 
 using ceres::CostFunction;
-using ceres::Problem;
 using ceres::SizedCostFunction;
-using ceres::Solve;
+using ceres::Problem;
 using ceres::Solver;
+using ceres::Solve;
 
 // A CostFunction implementing analytically derivatives for the
 // function f(x) = 10 - x.
 class QuadraticCostFunction
-    : public SizedCostFunction<1 /* number of residuals */,
-                               1 /* size of first parameter */> {
+  : public SizedCostFunction<1 /* number of residuals */,
+                             1 /* size of first parameter */> {
  public:
   virtual ~QuadraticCostFunction() {}
 
@@ -101,7 +100,8 @@ int main(int argc, char** argv) {
   Solve(options, &problem, &summary);
 
   std::cout << summary.BriefReport() << "\n";
-  std::cout << "x : " << initial_x << " -> " << x << "\n";
+  std::cout << "x : " << initial_x
+            << " -> " << x << "\n";
 
   return 0;
 }

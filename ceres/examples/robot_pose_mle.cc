@@ -125,9 +125,8 @@
 // will be computed by a DynamicAutoDiffCostFunction since the number of
 // odoemtry observations will only be known at run time.
 
-#include <math.h>
-
 #include <cstdio>
+#include <math.h>
 #include <vector>
 
 #include "ceres/ceres.h"
@@ -137,9 +136,9 @@
 #include "random.h"
 
 using ceres::AutoDiffCostFunction;
+using ceres::DynamicAutoDiffCostFunction;
 using ceres::CauchyLoss;
 using ceres::CostFunction;
-using ceres::DynamicAutoDiffCostFunction;
 using ceres::LossFunction;
 using ceres::Problem;
 using ceres::Solve;
@@ -148,35 +147,30 @@ using ceres::examples::RandNormal;
 using std::min;
 using std::vector;
 
-DEFINE_double(corridor_length,
-              30.0,
-              "Length of the corridor that the robot is travelling down.");
+DEFINE_double(corridor_length, 30.0, "Length of the corridor that the robot is "
+              "travelling down.");
 
-DEFINE_double(pose_separation,
-              0.5,
-              "The distance that the robot traverses between successive "
-              "odometry updates.");
+DEFINE_double(pose_separation, 0.5, "The distance that the robot traverses "
+              "between successive odometry updates.");
 
-DEFINE_double(odometry_stddev,
-              0.1,
-              "The standard deviation of odometry error of the robot.");
+DEFINE_double(odometry_stddev, 0.1, "The standard deviation of "
+              "odometry error of the robot.");
 
-DEFINE_double(range_stddev,
-              0.01,
-              "The standard deviation of range readings of the robot.");
+DEFINE_double(range_stddev, 0.01, "The standard deviation of range readings of "
+              "the robot.");
 
 // The stride length of the dynamic_autodiff_cost_function evaluator.
-static constexpr int kStride = 10;
+static const int kStride = 10;
 
 struct OdometryConstraint {
   typedef AutoDiffCostFunction<OdometryConstraint, 1, 1> OdometryCostFunction;
 
-  OdometryConstraint(double odometry_mean, double odometry_stddev)
-      : odometry_mean(odometry_mean), odometry_stddev(odometry_stddev) {}
+  OdometryConstraint(double odometry_mean, double odometry_stddev) :
+      odometry_mean(odometry_mean), odometry_stddev(odometry_stddev) {}
 
   template <typename T>
   bool operator()(const T* const odometry, T* residual) const {
-    *residual = (*odometry - odometry_mean) / odometry_stddev;
+    *residual = (*odometry - T(odometry_mean)) / T(odometry_stddev);
     return true;
   }
 
@@ -193,14 +187,13 @@ struct RangeConstraint {
   typedef DynamicAutoDiffCostFunction<RangeConstraint, kStride>
       RangeCostFunction;
 
-  RangeConstraint(int pose_index,
-                  double range_reading,
-                  double range_stddev,
-                  double corridor_length)
-      : pose_index(pose_index),
-        range_reading(range_reading),
-        range_stddev(range_stddev),
-        corridor_length(corridor_length) {}
+  RangeConstraint(
+      int pose_index,
+      double range_reading,
+      double range_stddev,
+      double corridor_length) :
+      pose_index(pose_index), range_reading(range_reading),
+      range_stddev(range_stddev), corridor_length(corridor_length) {}
 
   template <typename T>
   bool operator()(T const* const* relative_poses, T* residuals) const {
@@ -208,8 +201,8 @@ struct RangeConstraint {
     for (int i = 0; i <= pose_index; ++i) {
       global_pose += relative_poses[i][0];
     }
-    residuals[0] =
-        (global_pose + range_reading - corridor_length) / range_stddev;
+    residuals[0] = (global_pose + T(range_reading) - T(corridor_length)) /
+        T(range_stddev);
     return true;
   }
 
@@ -238,18 +231,16 @@ struct RangeConstraint {
   const double corridor_length;
 };
 
-namespace {
-
 void SimulateRobot(vector<double>* odometry_values,
                    vector<double>* range_readings) {
-  const int num_steps =
-      static_cast<int>(ceil(FLAGS_corridor_length / FLAGS_pose_separation));
+  const int num_steps = static_cast<int>(
+      ceil(FLAGS_corridor_length / FLAGS_pose_separation));
 
   // The robot starts out at the origin.
   double robot_location = 0.0;
   for (int i = 0; i < num_steps; ++i) {
-    const double actual_odometry_value =
-        min(FLAGS_pose_separation, FLAGS_corridor_length - robot_location);
+    const double actual_odometry_value = min(
+        FLAGS_pose_separation, FLAGS_corridor_length - robot_location);
     robot_location += actual_odometry_value;
     const double actual_range = FLAGS_corridor_length - robot_location;
     const double observed_odometry =
@@ -270,22 +261,17 @@ void PrintState(const vector<double>& odometry_readings,
     robot_location += odometry_readings[i];
     const double range_error =
         robot_location + range_readings[i] - FLAGS_corridor_length;
-    const double odometry_error = FLAGS_pose_separation - odometry_readings[i];
+    const double odometry_error =
+        FLAGS_pose_separation - odometry_readings[i];
     printf("%4d: %8.3f %8.3f %8.3f %8.3f %8.3f\n",
-           static_cast<int>(i),
-           robot_location,
-           odometry_readings[i],
-           range_readings[i],
-           range_error,
-           odometry_error);
+           static_cast<int>(i), robot_location, odometry_readings[i],
+           range_readings[i], range_error, odometry_error);
   }
 }
 
-}  // namespace
-
 int main(int argc, char** argv) {
   google::InitGoogleLogging(argv[0]);
-  GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
+  CERES_GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   // Make sure that the arguments parsed are all positive.
   CHECK_GT(FLAGS_corridor_length, 0.0);
   CHECK_GT(FLAGS_pose_separation, 0.0);
