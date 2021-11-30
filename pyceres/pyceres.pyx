@@ -24,31 +24,39 @@ def enum(*sequential, **named):
     return type('Enum', (), enums)
 
 Ownership = enum("DO_NOT_TAKE_OWNERSHIP", "TAKE_OWNERSHIP")
-
-MinimizerType = enum("LINE_SEARCH", "TRUST_REGION")
-
 LinearSolverType = enum("DENSE_NORMAL_CHOLESKY", "DENSE_QR",
                         "SPARSE_NORMAL_CHOLESKY", "DENSE_SCHUR", "SPARSE_SCHUR",
                         "ITERATIVE_SCHUR", "CGNR")
 PreconditionerType = enum("IDENTITY", "JACOBI", "SCHUR_JACOBI",
                           "CLUSTER_JACOBI", "CLUSTER_TRIDIAGONAL")
-SparseLinearAlgebraLibraryType = enum("SUITE_SPARSE", "CX_SPARSE")
-LinearSolverTerminationType = enum("TOLERANCE", "MAX_ITERATIONS", "STAGNATION",
-                                   "FAILURE")
+VisibilityClusteringType = enum("CANONICAL_VIEWS", "SINGLE_LINKAGE") #add
+SparseLinearAlgebraLibraryType = enum("SUITE_SPARSE", "CX_SPARSE", "EIGEN_SPARSE", "NO_SPARSE")
+DenseLinearAlgebraType=enum("EIGEN", LAPACK") #add
 LoggingType = enum("SILENT", "PER_MINIMIZER_ITERATION")
+MinimizerType = enum("LINE_SEARCH", "TRUST_REGION")
 LineSearchDirectionType = enum("STEEPEST_DESCENT",
                                "NONLINEAR_CONJUGATE_GRADIENT",
-                               "LBFGS")
+                               "LBFGS",
+                               "BFGS")
 NonlinearConjugateGradientType = enum("FLETCHER_REEVES", "POLAK_RIBIRERE",
                                       "HESTENES_STIEFEL")
-LineSearchType = enum("ARMIJO")
+LineSearchType = enum("ARMIJO", "WOLFE")
 TrustRegionStrategyType = enum("LEVENBERG_MARQUARDT", "DOGLEG")
 DoglegType = enum("TRADITIONAL_DOGLEG", "SUBSPACE_DOGLEG")
-SolverTerminationType = enum("CONVERGENCE", "NO_CONVERGENCE", "FAILURE", "USER_SUCCESS", "USER_FAILURE")
+TerminationType = enum("CONVERGENCE", "NO_CONVERGENCE", "FAILURE", "USER_SUCCESS", "USER_FAILURE") #added
 CallbackReturnType = enum("SOLVER_CONTINUE", "SOLVER_ABORT", "SOLVER_TERMINATE_SUCCESSFULLY")
-DumpFormatType = enum("CONSOLE", "PROTOBUF", "TEXTFILE")
+DumpFormatType = enum("CONSOLE", TEXTFILE")
 DimensionType = enum(DYNAMIC=-1)
-NumericDiffMethod = enum("CENTRAL", "FORWARD")
+NumericDiffMethod = enum("CENTRAL", "FORWARD", "RIDDERS")
+LineSearchInterpolationType = enum("BISECTION", "QUADRATIC", "CUBIC") #added
+CovarianceAlgorithmType = enum("DENSE_SVD", "SPARSE_QR") #added
+
+#these don't exist in ceres:
+LinearSolverTerminationType = enum("TOLERANCE", "MAX_ITERATIONS", "STAGNATION",
+                                   "FAILURE")
+SolverTerminationType = enum("CONVERGENCE", "NO_CONVERGENCE", "FAILURE", "USER_SUCCESS", "USER_FAILURE")
+
+
 
 # This class exist because you can't just send python function to c++
 # You will receive "bad argument to internal function" without it
@@ -540,6 +548,20 @@ cdef class PySolverOptions:
                     int_val = key
             self._options.line_search_type = int_val
 
+    property line_search_interpolation_type:
+        def __get__(self):
+            return self._options.line_search_interpolation_type
+
+        def __set__(self, value):
+            new_val = str_to_enum_str(value)
+            int_val = 0
+            if new_val not in LineSearchInterpolationType.reverse_mapping.values():
+                raise Exception("no such line search type")
+
+            for key, str_val in LineSearchInterpolationType.reverse_mapping.items():
+                if str_val == new_val:
+                    int_val = key
+            self._options.line_search_interpolation_type = int_val
 #
 def str_to_enum_str(value):
     val_up = value.upper()
