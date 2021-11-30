@@ -11,10 +11,10 @@ COMMON_DIR = os.path.join(INCLUDE_DIR, "Common")
 CERES_INCLUDE = os.path.join(COMMON_DIR, "ceres", "include")
 MINIGLOG=os.path.join(CERES_INCLUDE, "miniglog")
 
-with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
+with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding="utf-8") as readme:
     README = readme.read()
 
-with open(os.path.join(os.path.dirname(__file__), 'LICENSE')) as license:
+with open(os.path.join(os.path.dirname(__file__), 'LICENSE'), encoding="utf-8") as license:
     LICENSE = license.read()
 
 extra_compile_args = []
