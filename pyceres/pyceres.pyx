@@ -31,7 +31,7 @@ PreconditionerType = enum("IDENTITY", "JACOBI", "SCHUR_JACOBI",
                           "CLUSTER_JACOBI", "CLUSTER_TRIDIAGONAL")
 VisibilityClusteringType = enum("CANONICAL_VIEWS", "SINGLE_LINKAGE") #add
 SparseLinearAlgebraLibraryType = enum("SUITE_SPARSE", "CX_SPARSE", "EIGEN_SPARSE", "NO_SPARSE")
-DenseLinearAlgebraType=enum("EIGEN", LAPACK") #add
+DenseLinearAlgebraType=enum("EIGEN", "LAPACK") #add
 LoggingType = enum("SILENT", "PER_MINIMIZER_ITERATION")
 MinimizerType = enum("LINE_SEARCH", "TRUST_REGION")
 LineSearchDirectionType = enum("STEEPEST_DESCENT",
