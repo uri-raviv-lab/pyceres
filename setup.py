@@ -29,7 +29,7 @@ if sys.platform == 'win32':
     # extra_link_args = ['/debug']
 elif sys.platform in ['linux', 'linux2']:
     extra_compile_args = ['-fPIC', '-std=c++14']
-    LIB_DIR = r"../Common/ceres/bin/lib/libceres.a"
+    LIB_DIR = "./build/ceres/lib/libceres.a"
     macros = [('GOOGLE_GLOG_DLL_DECL', '_CRT_SECURE_NO_WARNINGS'),
               ('CERES_USE_CXX_THREADS', None),
               ('_MBCS', None),
@@ -136,7 +136,7 @@ class MoveCommand(setuptools.Command):
 
 setup(
     name='pyceres',
-    version='0.1',
+    version='0.2',
     packages=['pyceres'],
 	install_requires=['numpy>=1.10'],
     include_package_data=True,

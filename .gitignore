@@ -6,3 +6,5 @@ env/
 build/
 include/
 dist/
+*.whl
+linux-wheels/
