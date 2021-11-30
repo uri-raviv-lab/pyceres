@@ -45,7 +45,7 @@ TrustRegionStrategyType = enum("LEVENBERG_MARQUARDT", "DOGLEG")
 DoglegType = enum("TRADITIONAL_DOGLEG", "SUBSPACE_DOGLEG")
 TerminationType = enum("CONVERGENCE", "NO_CONVERGENCE", "FAILURE", "USER_SUCCESS", "USER_FAILURE") #added
 CallbackReturnType = enum("SOLVER_CONTINUE", "SOLVER_ABORT", "SOLVER_TERMINATE_SUCCESSFULLY")
-DumpFormatType = enum("CONSOLE", TEXTFILE")
+DumpFormatType = enum("CONSOLE", "TEXTFILE")
 DimensionType = enum(DYNAMIC=-1)
 NumericDiffMethod = enum("CENTRAL", "FORWARD", "RIDDERS")
 LineSearchInterpolationType = enum("BISECTION", "QUADRATIC", "CUBIC") #added
