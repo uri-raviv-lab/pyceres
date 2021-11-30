@@ -136,15 +136,15 @@ class MoveCommand(setuptools.Command):
 
 setup(
     name='pyceres',
-    version='0.2',
+    version='0.1.0',
     packages=['pyceres'],
 	install_requires=['numpy>=1.10'],
     include_package_data=True,
     license=LICENSE,  # example license
     description='A Python wrapper for Ceres 2.0',
-    url='researchsoftware.co.il',
+    url='http://www.researchsoftware.co.il',
     author='Devora Witty',
-    author_email='devorawitty@researchsoftware.co.il',
+    author_email='devora@researchsoftware.co.il',
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Environment :: Console',
@@ -153,7 +153,6 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.8',
-        'Topic :: Scientific/Engineering :: Chemistry',
     ],
     cmdclass={
         'prepare': PrepareCommand,
