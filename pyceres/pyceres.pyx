@@ -352,6 +352,11 @@ cdef class PySolverOptions:
             return self._options.update_state_every_iteration
         def __set__(self, value):
             self._options.update_state_every_iteration = value
+    property callbacks:
+        def __get__(self):
+            return self._options.callbacks
+        def __set__(self, value):
+            self._options.callbacks = value
     property gradient_tolerance:
         def __get__(self):
             return self._options.gradient_tolerance
