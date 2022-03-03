@@ -289,12 +289,21 @@ cdef class PyEvaluateOptions:
             return self._options.apply_loss_function
         def __set__(self, value):
             self._options.apply_loss_function = value
+
+cdef class PyIterationCallback:
+    cdef ceres_static.IterationCallback* _iterationCallback
+
+    def __cinit__(self):
+        pass
+    def __init__(self):
+        self._iterationCallback = new ceres_static.IterationCallback()
+
 cdef class PySolverOptions:
     cdef ceres_static.SolverOptions* _options
     def __cinit__(self):
         pass
     def __init__(self):
-        self._options = new ceres_static.SolverOptions()
+        self._options = new ceres_static.SolverOptions() 
     property max_num_iterations:
         def __get__(self):
             return self._options.max_num_iterations
@@ -354,9 +363,18 @@ cdef class PySolverOptions:
             self._options.update_state_every_iteration = value
     property callbacks:
         def __get__(self):
-            return self._options.callbacks
-        def __set__(self, value):
-            self._options.callbacks = value
+            callbacks = []
+            cdef int i
+            for i in range(self._options.callbacks.size()):
+                callback = PyIterationCallback()
+                callback._iterationCallback = self._options.callbacks[i]
+                callbacks.append(callback)
+            return callbacks
+        def __set__(self, callbacks):
+            self._options.callbacks.clear()
+            cdef PyIterationCallback callback
+            for callback in callbacks:
+                self._options.callbacks.push_back(callback._iterationCallback)
     property gradient_tolerance:
         def __get__(self):
             return self._options.gradient_tolerance
