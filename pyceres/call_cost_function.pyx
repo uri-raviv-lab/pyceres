@@ -7,7 +7,7 @@ import numpy as np
 cimport numpy as np
 
 #TODO: add credit
-cdef public bool call_obj(obj, const double* x,  double * p, double* residual, int numResiduals, int numParams) :
+cdef public bool call_cost_function(obj, const double* x,  double * p, double* residual, int numResiduals, int numParams) :
     # for some unknown reason you can't use numpy here ( cdef double[:] view fail, np_x.data fail)
     # however we must convert c types to python types. so we will create python lists that contain the values
     cdef int i

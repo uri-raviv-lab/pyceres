@@ -50,7 +50,7 @@ class PrepareCommand(setuptools.Command):
     def run(self):
         print("running prepare command")
         self.copy_source_files()
-        second_pyx = './pyceres/call_obj.pyx'
+        second_pyx = './pyceres/call_cost_function.pyx'
         self.convert_to_c(second_pyx)
         third_pyx = './pyceres/pyceres.pyx'
         self.convert_to_c(third_pyx)
@@ -161,7 +161,7 @@ setup(
     ext_modules=[
         Extension(
              "pyceres",
-             ["pyceres/pyceres.pyx", "pyceres/call_obj.pyx"],
+             ["pyceres/pyceres.pyx", "pyceres/call_cost_function.pyx"],
              language='c++',
              include_dirs=[CERES_INCLUDE, INCLUDE_DIR, COMMON_DIR, MINIGLOG, numpy.get_include()],
              define_macros=macros,

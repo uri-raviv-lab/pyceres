@@ -1089,18 +1089,18 @@ cdef extern from r"ceres/problem.h" namespace "ceres":
                         vector[double]* gradient,
                         CRSMatrix* jacobian)
 
-cdef extern from "py_obj_wrapper.h":
-    cdef cppclass PyObjWrapper:
-        PyObjWrapper()
-        PyObjWrapper(object) # define a constructor that takes a Python object
+cdef extern from "py_cost_func_wrapper.h":
+    cdef cppclass PyCostFuncWrapper:
+        PyCostFuncWrapper()
+        PyCostFuncWrapper(object) # define a constructor that takes a Python object
              # note - doesn't match c++ signature - that's fine!
 
 
 cdef extern from r"Backend/Backend/Residual.h":
     cdef cppclass Residual:
-        Residual(const double *x, const double* y, int numParams, int numResiduals, PyObjWrapper calcVector,
+        Residual(const double *x, const double* y, int numParams, int numResiduals, PyCostFuncWrapper calcVector,
 		vector[double] pBestParams, double *pBestEval) except +
         @staticmethod
         CostFunction *GetCeresCostFunction(const double *x, const double *y,
-		int numParams, int numResiduals, PyObjWrapper calcVector, double stepSize,
+		int numParams, int numResiduals, PyCostFuncWrapper calcVector, double stepSize,
 		double eps, vector[double] pBestParams, double *pBestEval)

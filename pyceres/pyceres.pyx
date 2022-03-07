@@ -54,7 +54,7 @@ cdef class PyResidual:
     cdef ceres_static.CostFunction* _residual_cost_function
     def __init__(self, x , y, num_params, num_residual, func2run, step_size, eps, best_param, best_eval):
         # const double *x, const double *y,
-		# int numParams, int numResiduals, PyObjWrapper calcVector, double stepSize,
+		# int numParams, int numResiduals, PyCostFuncWrapper calcVector, double stepSize,
 		# double eps, vector[double] pBestParams, double *pBestEval
         # np_y, num_params, num_residual, func2run, step_size, eps, best_param, best_eval
         cdef double* _x_ptr = NULL
@@ -73,7 +73,7 @@ cdef class PyResidual:
         for i in range(size):
             best_param_vec.push_back(array[i])
         in_class = RunFunc(func2run)
-        cdef ceres_static.PyObjWrapper func2run_wrapper = ceres_static.PyObjWrapper(in_class.in_func2run)
+        cdef ceres_static.PyCostFuncWrapper func2run_wrapper = ceres_static.PyCostFuncWrapper(in_class.in_func2run)
         cdef double* _best_v_ptr = NULL
         cdef np.ndarray[np.double_t, ndim=1] best_v
         best_v = best_eval
@@ -290,13 +290,6 @@ cdef class PyEvaluateOptions:
         def __set__(self, value):
             self._options.apply_loss_function = value
 
-cdef class PyIterationCallback:
-    cdef ceres_static.IterationCallback* _iterationCallback
-
-    def __cinit__(self):
-        pass
-    def __init__(self):
-        self._iterationCallback = new ceres_static.IterationCallback()
 
 cdef class PySolverOptions:
     cdef ceres_static.SolverOptions* _options
@@ -361,20 +354,6 @@ cdef class PySolverOptions:
             return self._options.update_state_every_iteration
         def __set__(self, value):
             self._options.update_state_every_iteration = value
-    property callbacks:
-        def __get__(self):
-            callbacks = []
-            cdef int i
-            for i in range(self._options.callbacks.size()):
-                callback = PyIterationCallback()
-                callback._iterationCallback = self._options.callbacks[i]
-                callbacks.append(callback)
-            return callbacks
-        def __set__(self, callbacks):
-            self._options.callbacks.clear()
-            cdef PyIterationCallback callback
-            for callback in callbacks:
-                self._options.callbacks.push_back(callback._iterationCallback)
     property gradient_tolerance:
         def __get__(self):
             return self._options.gradient_tolerance
