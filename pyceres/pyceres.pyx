@@ -45,12 +45,12 @@ NumericDiffMethod = enum("CENTRAL", "FORWARD")
 
 # This class exist because you can't just send python function to c++
 # You will receive "bad argument to internal function" without it
-class RunFunc:
+class RunCostFunc:
     def __init__(self, func2run):
         self.func = func2run
     def in_func2run(self, params, num_residual):
         return self.func(params, num_residual)
-cdef class PyResidual:
+cdef class PyResidual: # chana
     cdef ceres_static.CostFunction* _residual_cost_function
     def __init__(self, x , y, num_params, num_residual, func2run, step_size, eps, best_param, best_eval):
         # const double *x, const double *y,
@@ -72,8 +72,8 @@ cdef class PyResidual:
         cdef long i
         for i in range(size):
             best_param_vec.push_back(array[i])
-        in_class = RunFunc(func2run)
-        cdef ceres_static.PyCostFuncWrapper func2run_wrapper = ceres_static.PyCostFuncWrapper(in_class.in_func2run)
+        in_class = RunCostFunc(func2run) # chana
+        cdef ceres_static.PyCostFuncWrapper func2run_wrapper = ceres_static.PyCostFuncWrapper(in_class.in_func2run) # chana
         cdef double* _best_v_ptr = NULL
         cdef np.ndarray[np.double_t, ndim=1] best_v
         best_v = best_eval
@@ -221,7 +221,7 @@ cdef class PyProblem:
         pass
     # loss_function=NULL yields squared loss
     cpdef add_residual_block(self,
-                             PyResidual cost_function,
+                             PyResidual cost_function, # chana
                              PyLossFunction loss_function,
                              parameter_blocks=[]):
         cdef np.ndarray _tmp_array
@@ -290,6 +290,12 @@ cdef class PyEvaluateOptions:
         def __set__(self, value):
             self._options.apply_loss_function = value
 
+class RunIterationCallbackFunc:
+    def __init__(self, func2run):
+        self.func = func2run
+    def in_func2run(self, iteration_summary):
+        return self.func(iteration_summary)
+
 
 cdef class PySolverOptions:
     cdef ceres_static.SolverOptions* _options
@@ -297,6 +303,15 @@ cdef class PySolverOptions:
         pass
     def __init__(self):
         self._options = new ceres_static.SolverOptions() 
+        cdef vector[ceres_static.IterationCallback*] callbacks
+        self._options.callbacks = callbacks
+        
+    def set_callbacks(self, func2run):
+        in_class = RunIterationCallbackFunc(func2run) # chana
+        cdef ceres_static.PyIterationCallbackWrapper func2run_wrapper = ceres_static.PyIterationCallbackWrapper(in_class.in_func2run)
+        cdef vector[ceres_static.IterationCallback*] callbacks
+        callbacks.push_back(<ceres_static.IterationCallback*>&func2run_wrapper)
+        self._options.callbacks = callbacks
     property max_num_iterations:
         def __get__(self):
             return self._options.max_num_iterations

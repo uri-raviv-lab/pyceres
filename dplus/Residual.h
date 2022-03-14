@@ -30,7 +30,7 @@ public:
 		Eigen::Map<VectorXd> pBestParams_(pBestParams.data(), pBestParams.size());
 	}
 
-	static ceres::CostFunction *GetCeresCostFunction(const double *x, const double *y,
+	static ceres::CostFunction *GetCeresCostFunction(const double *x, const double *y, // chana
 		int numParams, int numResiduals, std::function<bool(const double*, double const* const*, double*, int, int)> calcVector, double stepSize = 1e-2,
 		double eps = 1e-6, std::vector<double> pBestParams = std::vector<double>(), double *pBestEval = NULL)
 	{
