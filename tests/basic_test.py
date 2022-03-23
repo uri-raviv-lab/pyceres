@@ -4,6 +4,8 @@ import math
 from time import sleep
 from copy import deepcopy
 
+stop_flag = dict(stop=1)
+
 class FakeFittingPreferences:
     def __init__(self):
         self.convergence = 0.1
@@ -90,8 +92,12 @@ class TestResidual:
         res /= 2.0
         return res
 
-def my_callback_function():
-    return 0
+
+def my_callback_function(iteration_summary=None):
+    stop_flag["stop"]+=1
+    if stop_flag["stop"]<2:
+        return 0
+    return 2
 
 class Optimizer:
     def __init__(self, calc_input):

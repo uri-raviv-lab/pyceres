@@ -293,7 +293,7 @@ cdef class PyEvaluateOptions:
 class RunIterationCallbackFunc:
     def __init__(self, func2run):
         self.func = func2run
-    def in_func2run(self, iteration_summary):
+    def in_func2run(self, iteration_summary=None):
         return self.func(iteration_summary)
 
 
