@@ -22,7 +22,7 @@ cdef public int call_iteration_function(obj) :
     # however we must convert c types to python types. so we will create python lists that contain the values
     cdef int CallbackReturnType_int
     print("---- call_iteration_function ----")
-    with open("C:\\Users\\chana\\Downloads\\output-pyx.txt", 'w') as f:
+    with open("C:\\Users\\User\\sources\\temp\\output-pyx.txt", 'a') as f:
         f.write("call_iteration_function")
     CallbackReturnType_int = obj()
     return CallbackReturnType_int

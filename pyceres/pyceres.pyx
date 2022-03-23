@@ -299,6 +299,8 @@ class RunIterationCallbackFunc:
 
 cdef class PySolverOptions:
     cdef ceres_static.SolverOptions* _options
+    cdef ceres_static.PyIterationCallbackWrapper wrapper
+
     def __cinit__(self):
         pass
     def __init__(self):
@@ -308,10 +310,11 @@ cdef class PySolverOptions:
         
     def set_callbacks(self, func2run):
         in_class = RunIterationCallbackFunc(func2run) # chana
-        cdef ceres_static.PyIterationCallbackWrapper func2run_wrapper = ceres_static.PyIterationCallbackWrapper(in_class.in_func2run)
+        self.wrapper = ceres_static.PyIterationCallbackWrapper(in_class.in_func2run)
         cdef vector[ceres_static.IterationCallback*] callbacks
-        callbacks.push_back(<ceres_static.IterationCallback*>&func2run_wrapper)
+        callbacks.push_back(<ceres_static.IterationCallback*>&self.wrapper)
         self._options.callbacks = callbacks
+
     property max_num_iterations:
         def __get__(self):
             return self._options.max_num_iterations
