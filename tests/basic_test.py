@@ -10,11 +10,11 @@ class FakeFittingPreferences:
         self.der_eps=0.1
         self.fitting_iterations=20
 
-
 class CalculationInput:
     def __init__(self, x, y, params):
         self.x = x
         self.y = y
+        assert(len(x)==len(y))
         self.params=params
         self.FittingPreferences=FakeFittingPreferences()
 
@@ -99,7 +99,6 @@ class Optimizer:
         self.best_params = None
         self.best_val = np.array([np.inf])
         self.bConverged = False
-        self._best_results = None
         self.init_problem()
 
     def init_problem(self):
@@ -143,7 +142,6 @@ class Optimizer:
         self.options.use_nonmonotonic_steps = True
 
     def solve(self): #this function is called "iterate" in D+
-        self._best_results = None
         summary = PySolverSummary()
         solve(self.options, self.problem, summary)
 
@@ -157,70 +155,15 @@ class Optimizer:
             self.calc_input.set_mutable_parameter_values(self.best_params)
         return cur_eval
 
-    @property
-    def best_results(self):
-        if not self._best_results:
-            self._best_results = self.calc_runner.generate(self.calc_input)
-        return self._best_results
-
-
-    @staticmethod
-    def fit(calc_input, calc_runner=None, save_amp=False):
-        if not calc_runner:
-            from dplus.CalculationRunner import LocalRunner
-            calc_runner = LocalRunner()
-        session_dir = calc_runner.session_directory
-        PyCeresOptimizer.save_status(session_dir, error=False, is_running=True)
-        try:
-            optimizer = PyCeresOptimizer(calc_input, calc_runner, save_amp)
-            gof = optimizer.solve()
-            print("Iteration GoF = %f\n", gof)
-
-            best_results = optimizer.best_results
-            data_path = os.path.join(session_dir, "data.json")
-            PyCeresOptimizer.save_dplus_arrays(best_results, data_path)
-            PyCeresOptimizer.save_status(session_dir, error=False, is_running=False, progress=1.0, code=0, message="OK")
-            return best_results
-        except Exception as e:
-            PyCeresOptimizer.save_status(session_dir, error=False, code=24, message=str(e), is_running=False, progress=0)
-            raise e
-
-    @staticmethod
-    def save_status(session_dir, error,is_running=False, progress=0.0, code=0, message="OK"):
-        if not error:
-            status_dict = {"isRunning": is_running, "progress": progress, "code": code,
-                           "message": str(message)}
-        else:
-            status_dict = {"error": {"code": code, "message": str(message)}}
-        with open(os.path.join(session_dir, "fit_job.json"), 'w') as file:
-            json.dump(status_dict, file)
-
-    @staticmethod
-    def save_dplus_arrays(best_results, outfile=None):
-        '''
-        a function for saving fit results in the bizarre special format D+ expects
-        :param outfile:
-        :return:
-        '''
-        param_tree = best_results._calc_data._get_dplus_fit_results_json()
-        result_dict = {
-            "ParameterTree": param_tree,
-            "Graph": list(best_results.y)
-        }
-        if outfile:
-            with open(outfile, 'w') as file:
-                json.dump(_handle_infinity_for_json(result_dict), file, cls=NumpyHandlingEncoder)
-
-        return result_dict
-
 
 
 
 def fit():
-    c=CalculationInput([2,4,6], [0, 2], [2,-4,6])
+    c=CalculationInput([1,2,3], [2,6,5], [1,2])
     optimizer = Optimizer(c)
     gof = optimizer.solve()
     print("Iteration GoF = %f\n", gof)
+    print("best params are", optimizer.best_params)
 
 
 if __name__=="__main__":
