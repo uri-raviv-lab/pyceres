@@ -1,6 +1,7 @@
 from pyceres import PyProblem, PySolverOptions, PyResidual, PyTrivialLoss, PySolverSummary, solve, SolverTerminationType
 import numpy as np
 import math
+from time import sleep
 from copy import deepcopy
 
 class FakeFittingPreferences:
@@ -89,12 +90,16 @@ class TestResidual:
         res /= 2.0
         return res
 
+def my_callback_function():
+    return 0
+
 class Optimizer:
     def __init__(self, calc_input):
         self.calc_input = calc_input
         self.calc_runner = CalcRunner()
         self.problem = PyProblem()
         self.options = PySolverOptions()
+        self.options.set_callbacks(my_callback_function)
         self.options.linear_solver_type=1
         self.best_params = None
         self.best_val = np.array([np.inf])
@@ -159,7 +164,7 @@ class Optimizer:
 
 
 def fit():
-    c=CalculationInput([1,2,3], [2,6,5], [1,2])
+    c=CalculationInput([1,2,3], [2,6,5], [10,-30])
     optimizer = Optimizer(c)
     gof = optimizer.solve()
     print("Iteration GoF = %f\n", gof)
