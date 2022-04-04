@@ -292,7 +292,7 @@ cdef extern from r"ceres/ordered_groups.h" namespace "ceres":
     ctypedef OrderedGroups[double*] ParameterBlockOrdering
 
 cdef extern from r"ceres/iteration_callback.h" namespace "ceres":
-    cdef struct IterationSummary:
+    cdef struct IterationSummary: # chana
         IterationSummary()
 
         # Current iteration number.
@@ -375,7 +375,7 @@ cdef extern from r"ceres/iteration_callback.h" namespace "ceres":
         double cumulative_time_in_seconds
 
 
-    cdef cppclass IterationCallback:
+    cdef cppclass IterationCallback: # chana
         CallbackReturnType operator()(const IterationSummary& summary)
 
 cdef extern from r"ceres/crs_matrix.h" namespace "ceres":
@@ -1089,18 +1089,24 @@ cdef extern from r"ceres/problem.h" namespace "ceres":
                         vector[double]* gradient,
                         CRSMatrix* jacobian)
 
-cdef extern from "py_obj_wrapper.h":
-    cdef cppclass PyObjWrapper:
-        PyObjWrapper()
-        PyObjWrapper(object) # define a constructor that takes a Python object
+cdef extern from "py_cost_func_wrapper.h":
+    cdef cppclass PyCostFuncWrapper: # chana
+        PyCostFuncWrapper()
+        PyCostFuncWrapper(object) # define a constructor that takes a Python object
              # note - doesn't match c++ signature - that's fine!
 
 
+cdef extern from "py_iter_callback_wrapper.h":
+    cdef cppclass PyIterationCallbackWrapper(IterationCallback): # chana
+        PyIterationCallbackWrapper()
+        PyIterationCallbackWrapper(object)# define a constructor that takes a Python object
+        # note - doesn't match c++ signature - that's fine!
+
 cdef extern from r"Backend/Backend/Residual.h":
     cdef cppclass Residual:
-        Residual(const double *x, const double* y, int numParams, int numResiduals, PyObjWrapper calcVector,
+        Residual(const double *x, const double* y, int numParams, int numResiduals, PyCostFuncWrapper calcVector,
 		vector[double] pBestParams, double *pBestEval) except +
         @staticmethod
-        CostFunction *GetCeresCostFunction(const double *x, const double *y,
-		int numParams, int numResiduals, PyObjWrapper calcVector, double stepSize,
+        CostFunction *GetCeresCostFunction(const double *x, const double *y, # chana
+		int numParams, int numResiduals, PyCostFuncWrapper calcVector, double stepSize,
 		double eps, vector[double] pBestParams, double *pBestEval)

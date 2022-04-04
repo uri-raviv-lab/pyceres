@@ -1,37 +1,37 @@
 //TODO: add credit
 #include <Python.h>
 #include <string>
-#include "call_obj.h" // cython helper file
+#include "call_cost_function.h" // cython helper file
 #include <iostream>
 using namespace std;
-class PyObjWrapper {
+class PyCostFuncWrapper {
 public:
     // constructors and destructors mostly do reference counting
-    PyObjWrapper(PyObject* o): held(o) {
+    PyCostFuncWrapper(PyObject* o): held(o) {
         Py_XINCREF(o);
     }
 
-    PyObjWrapper(const PyObjWrapper& rhs): PyObjWrapper(rhs.held) { // C++11 onwards only
+    PyCostFuncWrapper(const PyCostFuncWrapper& rhs): PyCostFuncWrapper(rhs.held) { // C++11 onwards only
     }
 
-    PyObjWrapper(PyObjWrapper&& rhs): held(rhs.held) {
+    PyCostFuncWrapper(PyCostFuncWrapper&& rhs): held(rhs.held) {
         rhs.held = 0;
     }
 
     // need no-arg constructor to stack allocate in Cython
-    PyObjWrapper(): PyObjWrapper(nullptr) {
+    PyCostFuncWrapper(): PyCostFuncWrapper(nullptr) {
     }
 
-    ~PyObjWrapper() {
+    ~PyCostFuncWrapper() {
         Py_XDECREF(held);
     }
 
-    PyObjWrapper& operator=(const PyObjWrapper& rhs) {
-        PyObjWrapper tmp = rhs;
+    PyCostFuncWrapper& operator=(const PyCostFuncWrapper& rhs) {
+        PyCostFuncWrapper tmp = rhs;
         return (*this = std::move(tmp));
     }
 
-    PyObjWrapper& operator=(PyObjWrapper&& rhs) {
+    PyCostFuncWrapper& operator=(PyCostFuncWrapper&& rhs) {
         held = rhs.held;
         rhs.held = 0;
         return *this;
@@ -47,7 +47,7 @@ public:
             tmp_p[i] = p[0][i];
         }
         if (held) { // nullptr check
-            flag = call_obj(held,x, tmp_p, residual, numResiduals, numParams); // note, no way of checking for errors until you return to Python
+            flag = call_cost_function(held,x, tmp_p, residual, numResiduals, numParams); // note, no way of checking for errors until you return to Python
         }
         delete tmp_p;
         return flag;

@@ -1,8 +1,10 @@
 *.egg-info/
 pyceres/*.cpp
 pyceres/*.h
-!pyceres/py_obj_wrapper.h
+!pyceres/py_cost_func_wrapper.h
+!pyceres/py_iter_callback_wrapper.h
 env/
+env*
 build/
 include/
 dist/

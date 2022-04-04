@@ -1,6 +1,7 @@
 ﻿# pyceres - a Python wrapper for Google Ceres
 
-This package is a Python wrapper for the Google Ceres solver library.
+This package is a Python wrapper for the Google Ceres solver library. 
+It is based on the pre-existing work from the [Cyres library](https://github.com/rll/cyres)
 
 ## Current State
 This package is in a pre-alpha state, and is mostly used for the development of [D+](https://bitbucket.org/uriraviv/public-dplus/src/master/)
