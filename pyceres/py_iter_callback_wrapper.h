@@ -48,7 +48,6 @@ public:
 
     ceres::CallbackReturnType operator ()(const ceres::IterationSummary &)
     {
-        cout << &call_iteration_function<<endl;
         int flag = 0;
         if (held)
         { // nullptr check

@@ -3,8 +3,9 @@ import numpy as np
 import math
 from time import sleep
 from copy import deepcopy
+import threading
 
-stop_flag = dict(stop=1)
+stop_flag = dict(stop=0)
 
 class FakeFittingPreferences:
     def __init__(self):
@@ -38,7 +39,8 @@ class CalcRunner:
     def my_func(self, calc_input):
         params = calc_input.params
         x = calc_input.x
-        return CalcResult([x[0] * params[0], x[1] * params[1], x[2]+params[0]])
+        sleep(0.1)
+        return CalcResult([x[0] * params[0] * params[1] + x[1], x[1] * params[1], x[2]+params[0]])
 
 
 class TestResidual:
@@ -94,10 +96,9 @@ class TestResidual:
 
 
 def my_callback_function(iteration_summary=None):
-    stop_flag["stop"]+=1
     if stop_flag["stop"]<2:
         return 0
-    return 2
+    return 1
 
 class Optimizer:
     def __init__(self, calc_input):
@@ -168,14 +169,43 @@ class Optimizer:
 
 
 
-
-def fit():
-    c=CalculationInput([1,2,3], [2,6,5], [10,-30])
-    optimizer = Optimizer(c)
-    gof = optimizer.solve()
-    print("Iteration GoF = %f\n", gof)
-    print("best params are", optimizer.best_params)
+class FitWithThread():
+    def __init__(self):
+        self.cur_thread=None
+    def fit(self):
+        c=CalculationInput([1,2,3], [2,6,5], [10,-30])
+        optimizer = Optimizer(c)
+        gof = optimizer.solve()
+        print("Iteration GoF = %f\n", gof)
+        print("best params are", optimizer.best_params)
+    def fit_async(self):
+        self.cur_thread = threading.Thread(target=self.fit)
+        self.cur_thread.start()
+        hi=1
+    def stop(self):
+        stop_flag["stop"]=5
+        self.cur_thread.join()
+    def get_status(self):
+        try:
+            if self.cur_thread:
+                is_alive = self.cur_thread.is_alive()
+                if is_alive:
+                    result = {"isRunning": True, "progress": 0.0, "code": -1, "message": ""}
+                else:
+                    if stop_flag["stop"] == 5:
+                        result = {"error": {"code": 22, "message": "job stop run"}}
+                    else:
+                        result = {"isRunning": False, "progress": 100.0, "code": 0, "message": ""}
+                    self.cur_thread.join()
+            else:
+                result = {"isRunning": False, "progress": 0.0, "code": -1, "message": ""}
+        except Exception as ex:
+            return {"error": {"code": 22, "message": str(ex)}}
+        return result
 
 
 if __name__=="__main__":
-    fit()
+    f=FitWithThread()
+    f.fit_async()
+    f.stop()
+    print(f.get_status())
