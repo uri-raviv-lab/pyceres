@@ -138,7 +138,7 @@ class MoveCommand(setuptools.Command):
 
 setup(
     name='pyceres',
-    version='0.1.1',
+    version='0.1.2',
     packages=['pyceres'],
 	install_requires=['numpy>=1.10'],
     include_package_data=True,
