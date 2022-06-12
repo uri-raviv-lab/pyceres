@@ -25,7 +25,8 @@ def prepare_eigen():
 
         cmd = 'cmake ../../eigen'
         if is_win():
-            cmd += ' -G"Visual Studio 16 2019" -DCMAKE_GENERATOR_PLATFORM=x64'
+#             cmd += ' -G"Visual Studio 17 2022" -DCMAKE_GENERATOR_PLATFORM=x64'
+            cmd += ' -DCMAKE_GENERATOR_PLATFORM=x64'
         os.system(cmd)
     finally:
         os.chdir(cwd)
@@ -39,7 +40,8 @@ def prepare_ceres():
 
         cmd = 'cmake ../../ceres -DMINIGLOG=ON -DEIGEN_INCLUDE_DIR_HINTS="../eigen"'
         if is_win():
-            cmd += ' -G"Visual Studio 16 2019" -DCMAKE_GENERATOR_PLATFORM=x64'
+#            cmd += ' -G"Visual Studio 17 2022" -DCMAKE_GENERATOR_PLATFORM=x64'
+            cmd += ' -DCMAKE_GENERATOR_PLATFORM=x64'
         os.system(cmd)
     finally:
         os.chdir(cwd)
