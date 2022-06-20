@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2018 Google Inc. All rights reserved.
+// Copyright 2022 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 //
 // This file is generated using generate_bundle_adjustment_tests.py.
 
+#include "ceres/internal/config.h"
 #include "bundle_adjustment_test_util.h"
 
 #ifndef CERES_NO_CXSPARSE
@@ -49,10 +50,11 @@ TEST_F(BundleAdjustmentTest,
   Solver::Options* options = bundle_adjustment_problem.mutable_solver_options();
   options->num_threads = 4;
   options->linear_solver_type = SPARSE_SCHUR;
+  options->dense_linear_algebra_library_type = EIGEN;
   options->sparse_linear_algebra_library_type = CX_SPARSE;
   options->preconditioner_type = IDENTITY;
   if (kUserOrdering) {
-    options->linear_solver_ordering.reset();
+    options->linear_solver_ordering = nullptr;
   }
   Problem* problem = bundle_adjustment_problem.mutable_problem();
   RunSolverForConfigAndExpectResidualsMatch(*options, problem);

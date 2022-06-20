@@ -35,6 +35,7 @@
 #include <cstdlib>
 
 #include "ceres/autodiff_cost_function.h"
+#include "ceres/internal/config.h"
 #include "ceres/problem.h"
 #include "ceres/solver.h"
 #include "ceres/test_util.h"
@@ -70,13 +71,13 @@ class PowellsFunction {
     x_[3] = 1.0;
 
     problem_.AddResidualBlock(
-        new AutoDiffCostFunction<F1, 1, 1, 1>(new F1), NULL, &x_[0], &x_[1]);
+        new AutoDiffCostFunction<F1, 1, 1, 1>(new F1), nullptr, &x_[0], &x_[1]);
     problem_.AddResidualBlock(
-        new AutoDiffCostFunction<F2, 1, 1, 1>(new F2), NULL, &x_[2], &x_[3]);
+        new AutoDiffCostFunction<F2, 1, 1, 1>(new F2), nullptr, &x_[2], &x_[3]);
     problem_.AddResidualBlock(
-        new AutoDiffCostFunction<F3, 1, 1, 1>(new F3), NULL, &x_[1], &x_[2]);
+        new AutoDiffCostFunction<F3, 1, 1, 1>(new F3), nullptr, &x_[1], &x_[2]);
     problem_.AddResidualBlock(
-        new AutoDiffCostFunction<F4, 1, 1, 1>(new F4), NULL, &x_[0], &x_[3]);
+        new AutoDiffCostFunction<F4, 1, 1, 1>(new F4), nullptr, &x_[0], &x_[3]);
 
     // Settings for the reference solution.
     options_.linear_solver_type = ceres::DENSE_QR;
@@ -97,7 +98,7 @@ class PowellsFunction {
     template <typename T>
     bool operator()(const T* const x1, const T* const x2, T* residual) const {
       // f1 = x1 + 10 * x2;
-      *residual = *x1 + 10.0 * *x2;
+      *residual = x1[0] + 10.0 * x2[0];
       return true;
     }
   };
@@ -107,7 +108,7 @@ class PowellsFunction {
     template <typename T>
     bool operator()(const T* const x3, const T* const x4, T* residual) const {
       // f2 = sqrt(5) (x3 - x4)
-      *residual = sqrt(5.0) * (*x3 - *x4);
+      *residual = sqrt(5.0) * (x3[0] - x4[0]);
       return true;
     }
   };
@@ -115,9 +116,9 @@ class PowellsFunction {
   class F3 {
    public:
     template <typename T>
-    bool operator()(const T* const x2, const T* const x4, T* residual) const {
+    bool operator()(const T* const x2, const T* const x3, T* residual) const {
       // f3 = (x2 - 2 x3)^2
-      residual[0] = (x2[0] - 2.0 * x4[0]) * (x2[0] - 2.0 * x4[0]);
+      residual[0] = (x2[0] - 2.0 * x3[0]) * (x2[0] - 2.0 * x3[0]);
       return true;
     }
   };
@@ -139,7 +140,7 @@ class PowellsFunction {
 
 double PowellsFunction::kResidualTolerance = 1e-8;
 
-typedef SystemTest<PowellsFunction> PowellTest;
+using PowellTest = SystemTest<PowellsFunction>;
 
 TEST_F(PowellTest, DenseQR) {
   PowellsFunction powells_function;

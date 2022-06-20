@@ -73,6 +73,7 @@ CERES_TESTS = [
     "array_utils",
     "autodiff_cost_function",
     "autodiff_local_parameterization",
+    "autodiff_manifold",
     "autodiff",
     "block_jacobi_preconditioner",
     "block_random_access_dense_matrix",
@@ -90,6 +91,7 @@ CERES_TESTS = [
     "cost_function_to_functor",
     "covariance",
     "cubic_interpolation",
+    "dense_cholesky",
     "dense_linear_solver",
     "dense_sparse_matrix",
     "detect_structure",
@@ -165,6 +167,10 @@ TEST_COPTS = [
     # but in the future disable these warnings only for rotation_test.
     # TODO(keir): When the tests are macro-ified, apply these selectively.
     "-Wno-address",
+
+    # Disable warnings about deprecated interfraces while we are
+    # transitioning from LocalParameterization to Manifolds.
+    "-Wno-deprecated-declarations",
 ]
 
 TEST_DEPS = [

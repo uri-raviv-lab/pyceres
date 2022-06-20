@@ -93,13 +93,12 @@ DEFINE_string(visibility_clustering, "canonical_views",
 DEFINE_string(sparse_linear_algebra_library, "suite_sparse",
               "Options are: suite_sparse and cx_sparse.");
 DEFINE_string(dense_linear_algebra_library, "eigen",
-              "Options are: eigen and lapack.");
+              "Options are: eigen, lapack, and cuda");
 DEFINE_string(ordering, "automatic", "Options are: automatic, user.");
 
 DEFINE_bool(use_quaternions, false, "If true, uses quaternions to represent "
             "rotations. If false, angle axis is used.");
-DEFINE_bool(use_local_parameterization, false, "For quaternions, use a local "
-            "parameterization.");
+DEFINE_bool(use_manifolds, false, "For quaternions, use a manifold.");
 DEFINE_bool(robustify, false, "Use a robust loss function.");
 
 DEFINE_double(eta, 1e-2, "Default value for eta. Eta determines the "
@@ -136,21 +135,25 @@ namespace examples {
 namespace {
 
 void SetLinearSolver(Solver::Options* options) {
-  CHECK(StringToLinearSolverType(FLAGS_linear_solver,
+  CHECK(StringToLinearSolverType(CERES_GET_FLAG(FLAGS_linear_solver),
                                  &options->linear_solver_type));
-  CHECK(StringToPreconditionerType(FLAGS_preconditioner,
+  CHECK(StringToPreconditionerType(CERES_GET_FLAG(FLAGS_preconditioner),
                                    &options->preconditioner_type));
-  CHECK(StringToVisibilityClusteringType(FLAGS_visibility_clustering,
-                                         &options->visibility_clustering_type));
+  CHECK(StringToVisibilityClusteringType(
+      CERES_GET_FLAG(FLAGS_visibility_clustering),
+      &options->visibility_clustering_type));
   CHECK(StringToSparseLinearAlgebraLibraryType(
-      FLAGS_sparse_linear_algebra_library,
+      CERES_GET_FLAG(FLAGS_sparse_linear_algebra_library),
       &options->sparse_linear_algebra_library_type));
   CHECK(StringToDenseLinearAlgebraLibraryType(
-      FLAGS_dense_linear_algebra_library,
+      CERES_GET_FLAG(FLAGS_dense_linear_algebra_library),
       &options->dense_linear_algebra_library_type));
-  options->use_explicit_schur_complement = FLAGS_explicit_schur_complement;
-  options->use_mixed_precision_solves = FLAGS_mixed_precision_solves;
-  options->max_num_refinement_iterations = FLAGS_max_num_refinement_iterations;
+  options->use_explicit_schur_complement =
+      CERES_GET_FLAG(FLAGS_explicit_schur_complement);
+  options->use_mixed_precision_solves =
+      CERES_GET_FLAG(FLAGS_mixed_precision_solves);
+  options->max_num_refinement_iterations =
+      CERES_GET_FLAG(FLAGS_max_num_refinement_iterations);
 }
 
 void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
@@ -163,21 +166,22 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
   double* cameras = bal_problem->mutable_cameras();
 
   if (options->use_inner_iterations) {
-    if (FLAGS_blocks_for_inner_iterations == "cameras") {
+    if (CERES_GET_FLAG(FLAGS_blocks_for_inner_iterations) == "cameras") {
       LOG(INFO) << "Camera blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_cameras; ++i) {
         options->inner_iteration_ordering->AddElementToGroup(
             cameras + camera_block_size * i, 0);
       }
-    } else if (FLAGS_blocks_for_inner_iterations == "points") {
+    } else if (CERES_GET_FLAG(FLAGS_blocks_for_inner_iterations) == "points") {
       LOG(INFO) << "Point blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_points; ++i) {
         options->inner_iteration_ordering->AddElementToGroup(
             points + point_block_size * i, 0);
       }
-    } else if (FLAGS_blocks_for_inner_iterations == "cameras,points") {
+    } else if (CERES_GET_FLAG(FLAGS_blocks_for_inner_iterations) ==
+               "cameras,points") {
       LOG(INFO) << "Camera followed by point blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_cameras; ++i) {
@@ -188,7 +192,8 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
         options->inner_iteration_ordering->AddElementToGroup(
             points + point_block_size * i, 1);
       }
-    } else if (FLAGS_blocks_for_inner_iterations == "points,cameras") {
+    } else if (CERES_GET_FLAG(FLAGS_blocks_for_inner_iterations) ==
+               "points,cameras") {
       LOG(INFO) << "Point followed by camera blocks for inner iterations";
       options->inner_iteration_ordering.reset(new ParameterBlockOrdering);
       for (int i = 0; i < num_cameras; ++i) {
@@ -199,11 +204,12 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
         options->inner_iteration_ordering->AddElementToGroup(
             points + point_block_size * i, 0);
       }
-    } else if (FLAGS_blocks_for_inner_iterations == "automatic") {
+    } else if (CERES_GET_FLAG(FLAGS_blocks_for_inner_iterations) ==
+               "automatic") {
       LOG(INFO) << "Choosing automatic blocks for inner iterations";
     } else {
       LOG(FATAL) << "Unknown block type for inner iterations: "
-                 << FLAGS_blocks_for_inner_iterations;
+                 << CERES_GET_FLAG(FLAGS_blocks_for_inner_iterations);
     }
   }
 
@@ -218,11 +224,11 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
   // the right ParameterBlock ordering, or by manually specifying a
   // suitable ordering vector and defining
   // Options::num_eliminate_blocks.
-  if (FLAGS_ordering == "automatic") {
+  if (CERES_GET_FLAG(FLAGS_ordering) == "automatic") {
     return;
   }
 
-  ceres::ParameterBlockOrdering* ordering = new ceres::ParameterBlockOrdering;
+  auto* ordering = new ceres::ParameterBlockOrdering;
 
   // The points come before the cameras.
   for (int i = 0; i < num_points; ++i) {
@@ -239,20 +245,22 @@ void SetOrdering(BALProblem* bal_problem, Solver::Options* options) {
 }
 
 void SetMinimizerOptions(Solver::Options* options) {
-  options->max_num_iterations = FLAGS_num_iterations;
+  options->max_num_iterations = CERES_GET_FLAG(FLAGS_num_iterations);
   options->minimizer_progress_to_stdout = true;
-  options->num_threads = FLAGS_num_threads;
-  options->eta = FLAGS_eta;
-  options->max_solver_time_in_seconds = FLAGS_max_solver_time;
-  options->use_nonmonotonic_steps = FLAGS_nonmonotonic_steps;
-  if (FLAGS_line_search) {
+  options->num_threads = CERES_GET_FLAG(FLAGS_num_threads);
+  options->eta = CERES_GET_FLAG(FLAGS_eta);
+  options->max_solver_time_in_seconds = CERES_GET_FLAG(FLAGS_max_solver_time);
+  options->use_nonmonotonic_steps = CERES_GET_FLAG(FLAGS_nonmonotonic_steps);
+  if (CERES_GET_FLAG(FLAGS_line_search)) {
     options->minimizer_type = ceres::LINE_SEARCH;
   }
 
-  CHECK(StringToTrustRegionStrategyType(FLAGS_trust_region_strategy,
-                                        &options->trust_region_strategy_type));
-  CHECK(StringToDoglegType(FLAGS_dogleg, &options->dogleg_type));
-  options->use_inner_iterations = FLAGS_inner_iterations;
+  CHECK(StringToTrustRegionStrategyType(
+      CERES_GET_FLAG(FLAGS_trust_region_strategy),
+      &options->trust_region_strategy_type));
+  CHECK(
+      StringToDoglegType(CERES_GET_FLAG(FLAGS_dogleg), &options->dogleg_type));
+  options->use_inner_iterations = CERES_GET_FLAG(FLAGS_inner_iterations);
 }
 
 void SetSolverOptionsFromFlags(BALProblem* bal_problem,
@@ -276,14 +284,15 @@ void BuildProblem(BALProblem* bal_problem, Problem* problem) {
     CostFunction* cost_function;
     // Each Residual block takes a point and a camera as input and
     // outputs a 2 dimensional residual.
-    cost_function = (FLAGS_use_quaternions)
+    cost_function = (CERES_GET_FLAG(FLAGS_use_quaternions))
                         ? SnavelyReprojectionErrorWithQuaternions::Create(
                               observations[2 * i + 0], observations[2 * i + 1])
                         : SnavelyReprojectionError::Create(
                               observations[2 * i + 0], observations[2 * i + 1]);
 
     // If enabled use Huber's loss function.
-    LossFunction* loss_function = FLAGS_robustify ? new HuberLoss(1.0) : NULL;
+    LossFunction* loss_function =
+        CERES_GET_FLAG(FLAGS_robustify) ? new HuberLoss(1.0) : nullptr;
 
     // Each observation correponds to a pair of a camera and a point
     // which are identified by camera_index()[i] and point_index()[i]
@@ -294,30 +303,30 @@ void BuildProblem(BALProblem* bal_problem, Problem* problem) {
     problem->AddResidualBlock(cost_function, loss_function, camera, point);
   }
 
-  if (FLAGS_use_quaternions && FLAGS_use_local_parameterization) {
-    LocalParameterization* camera_parameterization =
-        new ProductParameterization(new QuaternionParameterization(),
-                                    new IdentityParameterization(6));
+  if (CERES_GET_FLAG(FLAGS_use_quaternions) &&
+      CERES_GET_FLAG(FLAGS_use_manifolds)) {
+    Manifold* camera_manifold =
+        new ProductManifold<QuaternionManifold, EuclideanManifold<6>>{};
     for (int i = 0; i < bal_problem->num_cameras(); ++i) {
-      problem->SetParameterization(cameras + camera_block_size * i,
-                                   camera_parameterization);
+      problem->SetManifold(cameras + camera_block_size * i, camera_manifold);
     }
   }
 }
 
 void SolveProblem(const char* filename) {
-  BALProblem bal_problem(filename, FLAGS_use_quaternions);
+  BALProblem bal_problem(filename, CERES_GET_FLAG(FLAGS_use_quaternions));
 
-  if (!FLAGS_initial_ply.empty()) {
-    bal_problem.WriteToPLYFile(FLAGS_initial_ply);
+  if (!CERES_GET_FLAG(FLAGS_initial_ply).empty()) {
+    bal_problem.WriteToPLYFile(CERES_GET_FLAG(FLAGS_initial_ply));
   }
 
   Problem problem;
 
-  srand(FLAGS_random_seed);
+  srand(CERES_GET_FLAG(FLAGS_random_seed));
   bal_problem.Normalize();
-  bal_problem.Perturb(
-      FLAGS_rotation_sigma, FLAGS_translation_sigma, FLAGS_point_sigma);
+  bal_problem.Perturb(CERES_GET_FLAG(FLAGS_rotation_sigma),
+                      CERES_GET_FLAG(FLAGS_translation_sigma),
+                      CERES_GET_FLAG(FLAGS_point_sigma));
 
   BuildProblem(&bal_problem, &problem);
   Solver::Options options;
@@ -328,8 +337,8 @@ void SolveProblem(const char* filename) {
   Solve(options, &problem, &summary);
   std::cout << summary.FullReport() << "\n";
 
-  if (!FLAGS_final_ply.empty()) {
-    bal_problem.WriteToPLYFile(FLAGS_final_ply);
+  if (!CERES_GET_FLAG(FLAGS_final_ply).empty()) {
+    bal_problem.WriteToPLYFile(CERES_GET_FLAG(FLAGS_final_ply));
   }
 }
 
@@ -340,14 +349,14 @@ void SolveProblem(const char* filename) {
 int main(int argc, char** argv) {
   GFLAGS_NAMESPACE::ParseCommandLineFlags(&argc, &argv, true);
   google::InitGoogleLogging(argv[0]);
-  if (FLAGS_input.empty()) {
+  if (CERES_GET_FLAG(FLAGS_input).empty()) {
     LOG(ERROR) << "Usage: bundle_adjuster --input=bal_problem";
     return 1;
   }
 
-  CHECK(FLAGS_use_quaternions || !FLAGS_use_local_parameterization)
-      << "--use_local_parameterization can only be used with "
-      << "--use_quaternions.";
-  ceres::examples::SolveProblem(FLAGS_input.c_str());
+  CHECK(CERES_GET_FLAG(FLAGS_use_quaternions) ||
+        !CERES_GET_FLAG(FLAGS_use_manifolds))
+      << "--use_manifolds can only be used with --use_quaternions.";
+  ceres::examples::SolveProblem(CERES_GET_FLAG(FLAGS_input).c_str());
   return 0;
 }

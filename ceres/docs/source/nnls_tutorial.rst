@@ -355,14 +355,14 @@ respectively. Using these, the problem can be constructed as follows:
 
   Problem problem;
 
-  // Add residual terms to the problem using the using the autodiff
+  // Add residual terms to the problem using the autodiff
   // wrapper to get the derivatives automatically.
   problem.AddResidualBlock(
     new AutoDiffCostFunction<F1, 1, 1, 1>(new F1), nullptr, &x1, &x2);
   problem.AddResidualBlock(
     new AutoDiffCostFunction<F2, 1, 1, 1>(new F2), nullptr, &x3, &x4);
   problem.AddResidualBlock(
-    new AutoDiffCostFunction<F3, 1, 1, 1>(new F3), nullptr, &x2, &x3)
+    new AutoDiffCostFunction<F3, 1, 1, 1>(new F3), nullptr, &x2, &x3);
   problem.AddResidualBlock(
     new AutoDiffCostFunction<F4, 1, 1, 1>(new F4), nullptr, &x1, &x4);
 
@@ -728,7 +728,7 @@ simplest of them ``DENSE_SCHUR``.
 
 For a more sophisticated bundle adjustment example which demonstrates
 the use of Ceres' more advanced features including its various linear
-solvers, robust loss functions and local parameterizations see
+solvers, robust loss functions and manifolds see
 `examples/bundle_adjuster.cc
 <https://ceres-solver.googlesource.com/ceres-solver/+/master/examples/bundle_adjuster.cc>`_
 
@@ -886,10 +886,12 @@ directory contains a number of other examples:
    i.e. :math:`\Sigma_{ab}^{-\frac{1}{2}} r_{ab}` where :math:`\Sigma_{ab}` is
    the covariance.
 
-   Lastly, we use a local parameterization to normalize the orientation in the
-   range which is normalized between :math:`[-\pi,\pi)`.  Specially, we define
-   the :member:`AngleLocalParameterization::operator()` function to be:
-   :math:`\mathrm{Normalize}(\psi + \delta \psi)`.
+   Lastly, we use a manifold to normalize the orientation in the range
+   :math:`[-\pi,\pi)`.  Specially, we define the
+   :member:`AngleManifold::Plus()` function to be:
+   :math:`\mathrm{Normalize}(\psi + \Delta)` and
+   ::member::`AngleManifold::Minus()` function to be
+   :math:`\mathrm{Normalize}(y) - \mathrm{Normalize}(x)`.
 
    This package includes an executable :member:`pose_graph_2d` that will read a
    problem definition file. This executable can work with any 2D problem
@@ -980,17 +982,18 @@ directory contains a number of other examples:
    i.e. :math:`\Sigma_{ab}^{-\frac{1}{2}} r_{ab}` where :math:`\Sigma_{ab}` is
    the covariance.
 
-   Given that we are using a quaternion to represent the orientation, we need to
-   use a local parameterization (:class:`EigenQuaternionParameterization`) to
+   Given that we are using a quaternion to represent the orientation,
+   we need to use a manifold (:class:`EigenQuaternionManifold`) to
    only apply updates orthogonal to the 4-vector defining the
-   quaternion. Eigen's quaternion uses a different internal memory layout for
-   the elements of the quaternion than what is commonly used. Specifically,
-   Eigen stores the elements in memory as :math:`[x, y, z, w]` where the real
-   part is last whereas it is typically stored first. Note, when creating an
-   Eigen quaternion through the constructor the elements are accepted in
-   :math:`w`, :math:`x`, :math:`y`, :math:`z` order. Since Ceres operates on
-   parameter blocks which are raw double pointers this difference is important
-   and requires a different parameterization.
+   quaternion. Eigen's quaternion uses a different internal memory
+   layout for the elements of the quaternion than what is commonly
+   used. Specifically, Eigen stores the elements in memory as
+   :math:`[x, y, z, w]` where the real part is last whereas it is
+   typically stored first. Note, when creating an Eigen quaternion
+   through the constructor the elements are accepted in :math:`w`,
+   :math:`x`, :math:`y`, :math:`z` order. Since Ceres operates on
+   parameter blocks which are raw double pointers this difference is
+   important and requires a different parameterization.
 
    This package includes an executable :member:`pose_graph_3d` that will read a
    problem definition file. This executable can work with any 3D problem

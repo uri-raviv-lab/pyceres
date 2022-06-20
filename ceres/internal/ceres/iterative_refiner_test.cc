@@ -30,6 +30,8 @@
 
 #include "ceres/iterative_refiner.h"
 
+#include <utility>
+
 #include "Eigen/Dense"
 #include "ceres/internal/eigen.h"
 #include "ceres/sparse_cholesky.h"
@@ -53,8 +55,7 @@ namespace internal {
 // A fake SparseMatrix, which uses an Eigen matrix to do the real work.
 class FakeSparseMatrix : public SparseMatrix {
  public:
-  FakeSparseMatrix(const Matrix& m) : m_(m) {}
-  virtual ~FakeSparseMatrix() {}
+  explicit FakeSparseMatrix(Matrix m) : m_(std::move(m)) {}
 
   // y += Ax
   void RightMultiply(const double* x, double* y) const final {
@@ -89,8 +90,7 @@ class FakeSparseMatrix : public SparseMatrix {
 template <typename Scalar>
 class FakeSparseCholesky : public SparseCholesky {
  public:
-  FakeSparseCholesky(const Matrix& lhs) { lhs_ = lhs.cast<Scalar>(); }
-  virtual ~FakeSparseCholesky() {}
+  explicit FakeSparseCholesky(const Matrix& lhs) { lhs_ = lhs.cast<Scalar>(); }
 
   LinearSolverTerminationType Solve(const double* rhs_ptr,
                                     double* solution_ptr,
@@ -109,12 +109,6 @@ class FakeSparseCholesky : public SparseCholesky {
                                         std::string* message) final
       DO_NOT_CALL_WITH_RETURN(LINEAR_SOLVER_FAILURE);
 
-  LinearSolverTerminationType FactorAndSolve(CompressedRowSparseMatrix* lhs,
-                                             const double* rhs,
-                                             double* solution,
-                                             std::string* message) final
-      DO_NOT_CALL_WITH_RETURN(LINEAR_SOLVER_FAILURE);
-
  private:
   Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> lhs_;
 };
@@ -124,7 +118,7 @@ class FakeSparseCholesky : public SparseCholesky {
 
 class IterativeRefinerTest : public ::testing::Test {
  public:
-  void SetUp() {
+  void SetUp() override {
     num_cols_ = 5;
     max_num_iterations_ = 30;
     Matrix m(num_cols_, num_cols_);

@@ -1,2 +1,2 @@
-numpy
+numpy==1.22.3 # must match the version in dplus.
 Cython

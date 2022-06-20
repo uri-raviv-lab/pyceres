@@ -1,5 +1,6 @@
-
 .. default-domain:: cpp
+
+.. highlight:: c++
 
 .. cpp:namespace:: ceres
 
@@ -1239,8 +1240,8 @@ elimination group [LiSaad]_.
 
    where :math:`\|\cdot\|_\infty` refers to the max norm, :math:`\Pi`
    is projection onto the bounds constraints and :math:`\boxplus` is
-   Plus operation for the overall local parameterization associated
-   with the parameter vector.
+   Plus operation for the overall manifold associated with the
+   parameter vector.
 
 .. member:: double Solver::Options::parameter_tolerance
 
@@ -1324,16 +1325,17 @@ elimination group [LiSaad]_.
    Default:``EIGEN``
 
    Ceres supports using multiple dense linear algebra libraries for
-   dense matrix factorizations. Currently ``EIGEN`` and ``LAPACK`` are
-   the valid choices. ``EIGEN`` is always available, ``LAPACK`` refers
-   to the system ``BLAS + LAPACK`` library which may or may not be
-   available.
+   dense matrix factorizations. Currently ``EIGEN``, ``LAPACK`` and
+   ``CUDA`` are the valid choices. ``EIGEN`` is always available,
+   ``LAPACK`` refers to the system ``BLAS + LAPACK`` library which may
+   or may not be available. ``CUDA`` refers to Nvidia's GPU based
+   dense linear algebra library which may or may not be available.
 
    This setting affects the ``DENSE_QR``, ``DENSE_NORMAL_CHOLESKY``
    and ``DENSE_SCHUR`` solvers. For small to moderate sized probem
    ``EIGEN`` is a fine choice but for large problems, an optimized
-   ``LAPACK + BLAS`` implementation can make a substantial difference
-   in performance.
+   ``LAPACK + BLAS`` or ``CUDA`` implementation can make a substantial
+   difference in performance.
 
 .. member:: SparseLinearAlgebraLibrary Solver::Options::sparse_linear_algebra_library_type
 
@@ -1377,7 +1379,7 @@ elimination group [LiSaad]_.
 
    An instance of the ordering object informs the solver about the
    desired order in which parameter blocks should be eliminated by the
-   linear solvers. See section~\ref{sec:ordering`` for more details.
+   linear solvers.
 
    If ``NULL``, the solver is free to choose an ordering that it
    thinks is best.
@@ -1408,7 +1410,7 @@ elimination group [LiSaad]_.
    computed Schur complement. This can improve the performance of the
    ``ITERATIVE_SCHUR`` solver significantly.
 
-   .. NOTE:
+   .. NOTE::
 
      This option can only be used with the ``SCHUR_JACOBI``
      preconditioner.
@@ -1452,6 +1454,36 @@ elimination group [LiSaad]_.
    likely lead to worse performance.
 
    This setting only affects the `SPARSE_NORMAL_CHOLESKY` solver.
+
+.. member:: bool Solver::Options::use_mixed_precision_solves
+
+   Default: ``false``
+
+   .. NOTE::
+
+     This feature is EXPERIMENTAL and under development, use at your
+     own risk!
+
+   If true, the Gauss-Newton matrix is computed in *double* precision, but
+   its factorization is computed in **single** precision. This can result in
+   significant time and memory savings at the cost of some accuracy in the
+   Gauss-Newton step. Iterative refinement is used to recover some
+   of this accuracy back.
+
+   If ``use_mixed_precision_solves`` is true, we recommend setting
+   ``max_num_refinement_iterations`` to 2-3.
+
+   This option is currently only available if
+   ``sparse_linear_algebra_library_type`` is ``EIGEN_SPARSE`` or
+   ``ACCELERATE_SPARSE``, and ``linear_solver_type`` is
+   ``SPARSE_NORMAL_CHOLESKY`` or ``SPARSE_SCHUR``.
+
+.. member:: int Solver::Options::max_num_refinement_iterations
+
+   Default: ``0``
+
+   Number steps of the iterative refinement process to run when
+   computing the Gauss-Newton step, see ``use_mixed_precision_solves``.
 
 .. member:: int Solver::Options::min_linear_solver_iterations
 
@@ -1786,7 +1818,7 @@ elimination group [LiSaad]_.
 
    Number of groups with one or more elements.
 
-:class:`IterationCallback`
+:class:`IterationSummary`
 ==========================
 
 .. class:: IterationSummary
@@ -1906,6 +1938,8 @@ elimination group [LiSaad]_.
 
    Time (in seconds) since the user called Solve().
 
+:class:`IterationCallback`
+==========================
 
 .. class:: IterationCallback
 
@@ -2180,7 +2214,7 @@ The three arrays will be:
    Dimension of the tangent space of the problem (or the number of
    columns in the Jacobian for the problem). This is different from
    :member:`Solver::Summary::num_parameters` if a parameter block is
-   associated with a :class:`LocalParameterization`.
+   associated with a :class:`Manifold`.
 
 .. member:: int Solver::Summary::num_residual_blocks
 
@@ -2206,7 +2240,7 @@ The three arrays will be:
    number of columns in the Jacobian for the reduced problem). This is
    different from :member:`Solver::Summary::num_parameters_reduced` if
    a parameter block in the reduced problem is associated with a
-   :class:`LocalParameterization`.
+   :class:`Manifold`.
 
 .. member:: int Solver::Summary::num_residual_blocks_reduced
 

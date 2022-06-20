@@ -39,6 +39,7 @@
 #include "ceres/block_sparse_matrix.h"
 #include "ceres/compressed_row_sparse_matrix.h"
 #include "ceres/inner_product_computer.h"
+#include "ceres/internal/config.h"
 #include "ceres/internal/eigen.h"
 #include "ceres/iterative_refiner.h"
 #include "ceres/random.h"
@@ -51,10 +52,11 @@ namespace internal {
 
 namespace {
 
-BlockSparseMatrix* CreateRandomFullRankMatrix(const int num_col_blocks,
-                                              const int min_col_block_size,
-                                              const int max_col_block_size,
-                                              const double block_density) {
+std::unique_ptr<BlockSparseMatrix> CreateRandomFullRankMatrix(
+    const int num_col_blocks,
+    const int min_col_block_size,
+    const int max_col_block_size,
+    const double block_density) {
   // Create a random matrix
   BlockSparseMatrix::RandomMatrixOptions options;
   options.num_col_blocks = num_col_blocks;
@@ -65,16 +67,14 @@ BlockSparseMatrix* CreateRandomFullRankMatrix(const int num_col_blocks,
   options.min_row_block_size = 1;
   options.max_row_block_size = max_col_block_size;
   options.block_density = block_density;
-  std::unique_ptr<BlockSparseMatrix> random_matrix(
-      BlockSparseMatrix::CreateRandomMatrix(options));
+  auto random_matrix = BlockSparseMatrix::CreateRandomMatrix(options);
 
   // Add a diagonal block sparse matrix to make it full rank.
   Vector diagonal = Vector::Ones(random_matrix->num_cols());
-  std::unique_ptr<BlockSparseMatrix> block_diagonal(
-      BlockSparseMatrix::CreateDiagonalMatrix(
-          diagonal.data(), random_matrix->block_structure()->cols));
+  auto block_diagonal = BlockSparseMatrix::CreateDiagonalMatrix(
+      diagonal.data(), random_matrix->block_structure()->cols);
   random_matrix->AppendRows(*block_diagonal);
-  return random_matrix.release();
+  return random_matrix;
 }
 
 static bool ComputeExpectedSolution(const CompressedRowSparseMatrix& lhs,
@@ -115,15 +115,13 @@ void SparseCholeskySolverUnitTest(
   sparse_cholesky_options.sparse_linear_algebra_library_type =
       sparse_linear_algebra_library_type;
   sparse_cholesky_options.use_postordering = (ordering_type == AMD);
-  std::unique_ptr<SparseCholesky> sparse_cholesky =
-      SparseCholesky::Create(sparse_cholesky_options);
+  auto sparse_cholesky = SparseCholesky::Create(sparse_cholesky_options);
   const CompressedRowSparseMatrix::StorageType storage_type =
       sparse_cholesky->StorageType();
 
-  std::unique_ptr<BlockSparseMatrix> m(CreateRandomFullRankMatrix(
-      num_blocks, min_block_size, max_block_size, block_density));
-  std::unique_ptr<InnerProductComputer> inner_product_computer(
-      InnerProductComputer::Create(*m, storage_type));
+  auto m = CreateRandomFullRankMatrix(
+      num_blocks, min_block_size, max_block_size, block_density);
+  auto inner_product_computer = InnerProductComputer::Create(*m, storage_type);
   inner_product_computer->Compute();
   CompressedRowSparseMatrix* lhs = inner_product_computer->mutable_result();
 
@@ -150,8 +148,8 @@ void SparseCholeskySolverUnitTest(
       << eigen_lhs;
 }
 
-typedef ::testing::tuple<SparseLinearAlgebraLibraryType, OrderingType, bool>
-    Param;
+using Param =
+    ::testing::tuple<SparseLinearAlgebraLibraryType, OrderingType, bool>;
 
 std::string ParamInfoToString(testing::TestParamInfo<Param> info) {
   Param param = info.param;
@@ -270,8 +268,8 @@ using testing::_;
 using testing::Return;
 
 TEST(RefinedSparseCholesky, StorageType) {
-  MockSparseCholesky* mock_sparse_cholesky = new MockSparseCholesky;
-  MockIterativeRefiner* mock_iterative_refiner = new MockIterativeRefiner;
+  auto* mock_sparse_cholesky = new MockSparseCholesky;
+  auto* mock_iterative_refiner = new MockIterativeRefiner;
   EXPECT_CALL(*mock_sparse_cholesky, StorageType())
       .Times(1)
       .WillRepeatedly(Return(CompressedRowSparseMatrix::UPPER_TRIANGULAR));
@@ -285,8 +283,8 @@ TEST(RefinedSparseCholesky, StorageType) {
 };
 
 TEST(RefinedSparseCholesky, Factorize) {
-  MockSparseCholesky* mock_sparse_cholesky = new MockSparseCholesky;
-  MockIterativeRefiner* mock_iterative_refiner = new MockIterativeRefiner;
+  auto* mock_sparse_cholesky = new MockSparseCholesky;
+  auto* mock_iterative_refiner = new MockIterativeRefiner;
   EXPECT_CALL(*mock_sparse_cholesky, Factorize(_, _))
       .Times(1)
       .WillRepeatedly(Return(LINEAR_SOLVER_SUCCESS));
@@ -302,8 +300,8 @@ TEST(RefinedSparseCholesky, Factorize) {
 };
 
 TEST(RefinedSparseCholesky, FactorAndSolveWithUnsuccessfulFactorization) {
-  MockSparseCholesky* mock_sparse_cholesky = new MockSparseCholesky;
-  MockIterativeRefiner* mock_iterative_refiner = new MockIterativeRefiner;
+  auto* mock_sparse_cholesky = new MockSparseCholesky;
+  auto* mock_iterative_refiner = new MockIterativeRefiner;
   EXPECT_CALL(*mock_sparse_cholesky, Factorize(_, _))
       .Times(1)
       .WillRepeatedly(Return(LINEAR_SOLVER_FAILURE));
@@ -323,7 +321,7 @@ TEST(RefinedSparseCholesky, FactorAndSolveWithUnsuccessfulFactorization) {
 };
 
 TEST(RefinedSparseCholesky, FactorAndSolveWithSuccess) {
-  MockSparseCholesky* mock_sparse_cholesky = new MockSparseCholesky;
+  auto* mock_sparse_cholesky = new MockSparseCholesky;
   std::unique_ptr<MockIterativeRefiner> mock_iterative_refiner(
       new MockIterativeRefiner);
   EXPECT_CALL(*mock_sparse_cholesky, Factorize(_, _))

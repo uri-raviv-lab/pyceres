@@ -78,7 +78,8 @@ namespace examples {
 const double kDoubleMax = std::numeric_limits<double>::max();
 
 static void SetNumericDiffOptions(ceres::NumericDiffOptions* options) {
-  options->max_num_ridders_extrapolations = FLAGS_ridders_extrapolations;
+  options->max_num_ridders_extrapolations =
+      CERES_GET_FLAG(FLAGS_ridders_extrapolations);
 }
 
 #define BEGIN_MGH_PROBLEM(name, num_parameters, num_residuals)                \
@@ -90,22 +91,22 @@ static void SetNumericDiffOptions(ceres::NumericDiffOptions* options) {
     static const double constrained_optimal_cost;                             \
     static const double unconstrained_optimal_cost;                           \
     static CostFunction* Create() {                                           \
-      if (FLAGS_use_numeric_diff) {                                           \
+      if (CERES_GET_FLAG(FLAGS_use_numeric_diff)) {                           \
         ceres::NumericDiffOptions options;                                    \
         SetNumericDiffOptions(&options);                                      \
-        if (FLAGS_numeric_diff_method == "central") {                         \
+        if (CERES_GET_FLAG(FLAGS_numeric_diff_method) == "central") {         \
           return new NumericDiffCostFunction<name,                            \
                                              ceres::CENTRAL,                  \
                                              num_residuals,                   \
                                              num_parameters>(                 \
               new name, ceres::TAKE_OWNERSHIP, num_residuals, options);       \
-        } else if (FLAGS_numeric_diff_method == "forward") {                  \
+        } else if (CERES_GET_FLAG(FLAGS_numeric_diff_method) == "forward") {  \
           return new NumericDiffCostFunction<name,                            \
                                              ceres::FORWARD,                  \
                                              num_residuals,                   \
                                              num_parameters>(                 \
               new name, ceres::TAKE_OWNERSHIP, num_residuals, options);       \
-        } else if (FLAGS_numeric_diff_method == "ridders") {                  \
+        } else if (CERES_GET_FLAG(FLAGS_numeric_diff_method) == "ridders") {  \
           return new NumericDiffCostFunction<name,                            \
                                              ceres::RIDDERS,                  \
                                              num_residuals,                   \
@@ -113,7 +114,7 @@ static void SetNumericDiffOptions(ceres::NumericDiffOptions* options) {
               new name, ceres::TAKE_OWNERSHIP, num_residuals, options);       \
         } else {                                                              \
           LOG(ERROR) << "Invalid numeric diff method specified";              \
-          return NULL;                                                        \
+          return nullptr;                                                     \
         }                                                                     \
       } else {                                                                \
         return new AutoDiffCostFunction<name, num_residuals, num_parameters>( \
@@ -548,7 +549,7 @@ bool Solve(bool is_constrained, int trial) {
   }
 
   Problem problem;
-  problem.AddResidualBlock(TestProblem::Create(), NULL, x);
+  problem.AddResidualBlock(TestProblem::Create(), nullptr, x);
   double optimal_cost = TestProblem::unconstrained_optimal_cost;
 
   if (is_constrained) {
@@ -597,7 +598,8 @@ int main(int argc, char** argv) {
 
 #define UNCONSTRAINED_SOLVE(n)                              \
   ss << "Unconstrained Problem " << n << " : ";             \
-  if (FLAGS_problem == #n || FLAGS_problem == "all") {      \
+  if (CERES_GET_FLAG(FLAGS_problem) == #n ||                \
+      CERES_GET_FLAG(FLAGS_problem) == "all") {             \
     unconstrained_problems += 3;                            \
     if (Solve<ceres::examples::TestProblem##n>(false, 0)) { \
       unconstrained_successes += 1;                         \
@@ -645,7 +647,8 @@ int main(int argc, char** argv) {
 
 #define CONSTRAINED_SOLVE(n)                               \
   ss << "Constrained Problem " << n << " : ";              \
-  if (FLAGS_problem == #n || FLAGS_problem == "all") {     \
+  if (CERES_GET_FLAG(FLAGS_problem) == #n ||               \
+      CERES_GET_FLAG(FLAGS_problem) == "all") {            \
     constrained_problems += 1;                             \
     if (Solve<ceres::examples::TestProblem##n>(true, 0)) { \
       constrained_successes += 1;                          \

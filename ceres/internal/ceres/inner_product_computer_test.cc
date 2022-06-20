@@ -50,7 +50,7 @@ namespace internal {
     CompressedRowSparseMatrix* actual_product_crsm =                         \
         inner_product_computer->mutable_result();                            \
     Matrix actual_inner_product =                                            \
-        Eigen::MappedSparseMatrix<double, Eigen::ColMajor>(                  \
+        Eigen::Map<Eigen::SparseMatrix<double, Eigen::ColMajor>>(            \
             actual_product_crsm->num_rows(),                                 \
             actual_product_crsm->num_rows(),                                 \
             actual_product_crsm->num_nonzeros(),                             \
@@ -117,8 +117,7 @@ TEST(InnerProductComputer, NormalOperation) {
         random_matrix->ToTripletSparseMatrix(&tsm);
         std::vector<Eigen::Triplet<double>> triplets;
         for (int i = 0; i < tsm.num_nonzeros(); ++i) {
-          triplets.push_back(Eigen::Triplet<double>(
-              tsm.rows()[i], tsm.cols()[i], tsm.values()[i]));
+          triplets.emplace_back(tsm.rows()[i], tsm.cols()[i], tsm.values()[i]);
         }
         Eigen::SparseMatrix<double> eigen_random_matrix(
             random_matrix->num_rows(), random_matrix->num_cols());
@@ -128,11 +127,11 @@ TEST(InnerProductComputer, NormalOperation) {
 
         std::unique_ptr<InnerProductComputer> inner_product_computer;
 
-        inner_product_computer.reset(InnerProductComputer::Create(
-            *random_matrix, CompressedRowSparseMatrix::LOWER_TRIANGULAR));
+        inner_product_computer = InnerProductComputer::Create(
+            *random_matrix, CompressedRowSparseMatrix::LOWER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
-        inner_product_computer.reset(InnerProductComputer::Create(
-            *random_matrix, CompressedRowSparseMatrix::UPPER_TRIANGULAR));
+        inner_product_computer = InnerProductComputer::Create(
+            *random_matrix, CompressedRowSparseMatrix::UPPER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
       }
     }
@@ -189,8 +188,8 @@ TEST(InnerProductComputer, SubMatrix) {
         std::vector<Eigen::Triplet<double>> triplets;
         for (int i = 0; i < tsm.num_nonzeros(); ++i) {
           if (tsm.rows()[i] >= start_row && tsm.rows()[i] < end_row) {
-            triplets.push_back(Eigen::Triplet<double>(
-                tsm.rows()[i], tsm.cols()[i], tsm.values()[i]));
+            triplets.emplace_back(
+                tsm.rows()[i], tsm.cols()[i], tsm.values()[i]);
           }
         }
 
@@ -202,17 +201,17 @@ TEST(InnerProductComputer, SubMatrix) {
             eigen_random_matrix.transpose() * eigen_random_matrix;
 
         std::unique_ptr<InnerProductComputer> inner_product_computer;
-        inner_product_computer.reset(InnerProductComputer::Create(
+        inner_product_computer = InnerProductComputer::Create(
             *random_matrix,
             start_row_block,
             end_row_block,
-            CompressedRowSparseMatrix::LOWER_TRIANGULAR));
+            CompressedRowSparseMatrix::LOWER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
-        inner_product_computer.reset(InnerProductComputer::Create(
+        inner_product_computer = InnerProductComputer::Create(
             *random_matrix,
             start_row_block,
             end_row_block,
-            CompressedRowSparseMatrix::UPPER_TRIANGULAR));
+            CompressedRowSparseMatrix::UPPER_TRIANGULAR);
         COMPUTE_AND_COMPARE;
       }
     }

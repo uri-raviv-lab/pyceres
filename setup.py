@@ -9,7 +9,7 @@ import setuptools
 INCLUDE_DIR = os.path.join('build', 'include')
 COMMON_DIR = os.path.join(INCLUDE_DIR, "Common")
 CERES_INCLUDE = os.path.join(COMMON_DIR, "ceres", "include")
-MINIGLOG=os.path.join(CERES_INCLUDE, "miniglog")
+MINIGLOG = os.path.join(CERES_INCLUDE, "miniglog")
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding="utf-8") as readme:
     README = readme.read()
@@ -24,7 +24,9 @@ if sys.platform == 'win32':
     macros = [('GOOGLE_GLOG_DLL_DECL', '_CRT_SECURE_NO_WARNINGS'),
               ('CERES_USE_CXX_THREADS', None),
               ('_MBCS', None),
-              ('CERES_USING_STATIC_LIBRARY', None)]
+              ('CERES_USING_STATIC_LIBRARY', None),
+            #   ('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')  # ?
+              ]
     extra_compile_args = ['/Ox']
     # extra_link_args = ['/debug']
 elif sys.platform in ['linux', 'linux2']:
@@ -75,7 +77,13 @@ class PrepareCommand(setuptools.Command):
         #os.makedirs(CERES_INCLUDE)
         print("copying ceres files")
         shutil.copytree(r"./ceres/include", CERES_INCLUDE)
-        shutil.copy(r"./ceres/config/ceres/internal/config.h", os.path.join(CERES_INCLUDE, "ceres","internal"))
+
+        shutil.copy(r"./build/ceres/include/ceres/internal/config.h", os.path.join(CERES_INCLUDE, "ceres","internal"))
+        shutil.copy(r"./build/ceres/include/ceres/internal/export.h", os.path.join(CERES_INCLUDE, "ceres","internal"))
+
+
+        # shutil.copy(r"./ceres/config/ceres/internal/config.h", os.path.join(CERES_INCLUDE, "ceres","internal"))
+        # # shutil.copy(r"./ceres/config/ceres/internal/export.h", os.path.join(CERES_INCLUDE, "ceres","internal"))
 
         print("copying miniglog files")
         shutil.copytree("./ceres/internal/ceres/miniglog", MINIGLOG)
@@ -121,7 +129,7 @@ class MoveCommand(setuptools.Command):
                 lib_dir=os.path.join(build_dir, dir)
         names=[]
         if lib_dir:
-            
+            print("lib_dir", lib_dir)
             for name in os.listdir(lib_dir):
                 print(name)
                 if ".pyd" in name or ".so" in str(name):
@@ -138,9 +146,9 @@ class MoveCommand(setuptools.Command):
 
 setup(
     name='pyceres',
-    version='0.3.0',
+    version='0.4.0',
     packages=['pyceres'],
-	install_requires=['numpy>=1.10'],
+	install_requires=['numpy==1.22.3'], # must match the numpy version in dplus.
     include_package_data=True,
     license=LICENSE,  # example license
     description='A Python wrapper for Ceres 2.0',

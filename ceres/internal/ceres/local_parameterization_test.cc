@@ -1,5 +1,5 @@
 // Ceres Solver - A fast non-linear least squares minimizer
-// Copyright 2015 Google Inc. All rights reserved.
+// Copyright 2022 Google Inc. All rights reserved.
 // http://ceres-solver.org/
 //
 // Redistribution and use in source and binary forms, with or without
@@ -271,7 +271,7 @@ void QuaternionParameterizationTestHelper(const double* x,
   Parameterization parameterization;
   parameterization.Plus(x, delta, x_plus_delta);
   for (int i = 0; i < kGlobalSize; ++i) {
-    EXPECT_NEAR(x_plus_delta[i], x_plus_delta[i], kTolerance);
+    EXPECT_NEAR(x_plus_delta[i], x_plus_delta_ref[i], kTolerance);
   }
 
   const double x_plus_delta_norm = sqrt(
@@ -283,7 +283,7 @@ void QuaternionParameterizationTestHelper(const double* x,
   double jacobian_ref[12];
   double zero_delta[kLocalSize] = {0.0, 0.0, 0.0};
   const double* parameters[2] = {x, zero_delta};
-  double* jacobian_array[2] = {NULL, jacobian_ref};
+  double* jacobian_array[2] = {nullptr, jacobian_ref};
 
   // Autodiff jacobian at delta_x = 0.
   internal::AutoDifferentiate<kGlobalSize,
@@ -293,7 +293,7 @@ void QuaternionParameterizationTestHelper(const double* x,
   double jacobian[12];
   parameterization.ComputeJacobian(x, jacobian);
   for (int i = 0; i < 12; ++i) {
-    EXPECT_TRUE(IsFinite(jacobian[i]));
+    EXPECT_TRUE(isfinite(jacobian[i]));
     EXPECT_NEAR(jacobian[i], jacobian_ref[i], kTolerance)
         << "Jacobian mismatch: i = " << i << "\n Expected \n"
         << ConstMatrixRef(jacobian_ref, kGlobalSize, kLocalSize)
@@ -332,8 +332,8 @@ TEST(QuaternionParameterization, NearZeroTest) {
   Normalize<4>(x);
 
   double delta[3] = {0.24, 0.15, 0.10};
-  for (int i = 0; i < 3; ++i) {
-    delta[i] = delta[i] * 1e-14;
+  for (double& delta_i : delta) {
+    delta_i = delta_i * 1e-14;
   }
 
   double q_delta[4];
@@ -411,8 +411,8 @@ TEST(EigenQuaternionParameterization, NearZeroTest) {
   x.normalize();
 
   double delta[3] = {0.24, 0.15, 0.10};
-  for (int i = 0; i < 3; ++i) {
-    delta[i] = delta[i] * 1e-14;
+  for (double& delta_i : delta) {
+    delta_i = delta_i * 1e-14;
   }
 
   // Note: w is first in the constructor.
@@ -524,7 +524,7 @@ static void HomogeneousVectorParameterizationHelper(const double* x,
   autodiff_jacobian.ComputeJacobian(x, jacobian_autodiff);
 
   for (int i = 0; i < 12; ++i) {
-    EXPECT_TRUE(ceres::IsFinite(jacobian_analytic[i]));
+    EXPECT_TRUE(ceres::isfinite(jacobian_analytic[i]));
     EXPECT_NEAR(jacobian_analytic[i], jacobian_autodiff[i], kTolerance)
         << "Jacobian mismatch: i = " << i << ", " << jacobian_analytic[i] << " "
         << jacobian_autodiff[i];
@@ -779,27 +779,27 @@ class ProductParameterizationTest : public ::testing::Test {
     const int global_size1 = 5;
     std::vector<int> constant_parameters1;
     constant_parameters1.push_back(2);
-    param1_.reset(
-        new SubsetParameterization(global_size1, constant_parameters1));
+    param1_ = std::make_unique<SubsetParameterization>(global_size1,
+                                                       constant_parameters1);
 
     const int global_size2 = 3;
     std::vector<int> constant_parameters2;
     constant_parameters2.push_back(0);
     constant_parameters2.push_back(1);
-    param2_.reset(
-        new SubsetParameterization(global_size2, constant_parameters2));
+    param2_ = std::make_unique<SubsetParameterization>(global_size2,
+                                                       constant_parameters2);
 
     const int global_size3 = 4;
     std::vector<int> constant_parameters3;
     constant_parameters3.push_back(1);
-    param3_.reset(
-        new SubsetParameterization(global_size3, constant_parameters3));
+    param3_ = std::make_unique<SubsetParameterization>(global_size3,
+                                                       constant_parameters3);
 
     const int global_size4 = 2;
     std::vector<int> constant_parameters4;
     constant_parameters4.push_back(1);
-    param4_.reset(
-        new SubsetParameterization(global_size4, constant_parameters4));
+    param4_ = std::make_unique<SubsetParameterization>(global_size4,
+                                                       constant_parameters4);
   }
 
   std::unique_ptr<LocalParameterization> param1_;
