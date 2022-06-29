@@ -139,7 +139,7 @@ class MoveCommand(setuptools.Command):
 
 setup(
     name='dplus_ceres',
-    version='0.3.0',
+    version='0.4.0',
     packages=['dplus_ceres'],
 	install_requires=['numpy>=1.23.0,<1.24'],
     python_requires='>=3.7',

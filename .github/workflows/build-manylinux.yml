@@ -12,16 +12,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build docker image
-        run: docker build -f Dockerfile.manylinux . -t pyceres-manylinux:latest
+        run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest
       - name: Copy wheels
         run: |
-          docker run --rm --name pyceres-manylinux -v `pwd`:/external pyceres-manylinux:latest
+          docker run --rm --name dplus-ceres-manylinux -v `pwd`:/external dplus-ceres-manylinux:latest
       - name: Upload to Release
         id: upload-release-asset
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: pyceres-wheels/pyceres*.whl
+          file: ceres-wheels/dplus_ceres*.whl
           file_glob: true
           tag: ${{ github.ref }}
           overwrite: true
