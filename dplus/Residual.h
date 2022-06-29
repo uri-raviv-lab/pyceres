@@ -4,9 +4,10 @@
 
 #include <functional>
 #include "ceres/cost_function.h"
-//#include "ceres/dynamic_adaptive_numeric_diff_cost_function.h"
+#include "dynamic_adaptive_numeric_diff_cost_function.h"
 #include "ceres/dynamic_numeric_diff_cost_function.h"
 #include "ceres/numeric_diff_options.h"
+
 using namespace Eigen;
 class Residual
 {
@@ -34,21 +35,21 @@ public:
 		int numParams, int numResiduals, std::function<bool(const double*, double const* const*, double*, int, int)> calcVector, double stepSize = 1e-2,
 		double eps = 1e-6, std::vector<double> pBestParams = std::vector<double>(), double *pBestEval = NULL)
 	{
-		//auto *res =
-		//	new ceres::DynamicAdaptiveNumericDiffCostFunction<Residual, ceres::CENTRAL, 10, true>(
-		//		new Residual(x, y, numParams, numResiduals, calcVector, pBestParams, pBestEval),
-		//		ceres::TAKE_OWNERSHIP, stepSize, eps);
-
-		ceres::NumericDiffOptions opt;
-		// the previus ceres default param
-		opt.ridders_step_shrink_factor = 1.4;
-		opt.ridders_epsilon = 1e-6;
-		opt.relative_step_size = 1e-2;
-		opt.max_num_ridders_extrapolations = 10;
 		auto *res =
-			new ceres::DynamicNumericDiffCostFunction<Residual, ceres::RIDDERS>(
+			new ceres::DynamicAdaptiveNumericDiffCostFunction<Residual, ceres::CENTRAL, 10, true>(
 				new Residual(x, y, numParams, numResiduals, calcVector, pBestParams, pBestEval),
-				ceres::TAKE_OWNERSHIP, opt);
+				ceres::TAKE_OWNERSHIP, stepSize, eps);
+
+		// ceres::NumericDiffOptions opt;
+		// // the previus ceres default param
+		// opt.ridders_step_shrink_factor = 1.4;
+		// opt.ridders_epsilon = 1e-6;
+		// opt.relative_step_size = 1e-2;
+		// opt.max_num_ridders_extrapolations = 10;
+		// auto *res =
+		// 	new ceres::DynamicNumericDiffCostFunction<Residual, ceres::RIDDERS>(
+		// 		new Residual(x, y, numParams, numResiduals, calcVector, pBestParams, pBestEval),
+		// 		ceres::TAKE_OWNERSHIP, opt);
 
 		res->AddParameterBlock(numParams);
 		res->SetNumResiduals(numResiduals);

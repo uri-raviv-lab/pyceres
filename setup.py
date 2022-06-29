@@ -66,6 +66,7 @@ class PrepareCommand(setuptools.Command):
         print("copying backend files")
         #shutil.copy(r"../Backend/Backend/PeriodicSplineSolver.h", backend_dir)
         shutil.copy(r"./dplus/Residual.h", backend_dir)
+        shutil.copy(r"./dplus/dynamic_adaptive_numeric_diff_cost_function.h", backend_dir)
 
         os.makedirs(COMMON_DIR)
         print("copying common files")
