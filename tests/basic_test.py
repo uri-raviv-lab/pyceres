@@ -1,4 +1,4 @@
-from pyceres import PyProblem, PySolverOptions, PyResidual, PyTrivialLoss, PySolverSummary, solve, SolverTerminationType
+from dplus_ceres import PyProblem, PySolverOptions, PyResidual, PyTrivialLoss, PySolverSummary, solve, SolverTerminationType
 import numpy as np
 import math
 from time import sleep

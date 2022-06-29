@@ -50,11 +50,11 @@ class PrepareCommand(setuptools.Command):
     def run(self):
         print("running prepare command")
         self.copy_source_files()
-        first_pyx = './pyceres/iteration_callback_func.pyx'
+        first_pyx = './dplus_ceres/iteration_callback_func.pyx'
         self.convert_to_c(first_pyx)
-        second_pyx = './pyceres/call_cost_function.pyx'
+        second_pyx = './dplus_ceres/call_cost_function.pyx'
         self.convert_to_c(second_pyx)
-        third_pyx = './pyceres/pyceres.pyx'
+        third_pyx = './dplus_ceres/dplus_ceres.pyx'
         self.convert_to_c(third_pyx)
 
     def copy_source_files(self):
@@ -138,24 +138,28 @@ class MoveCommand(setuptools.Command):
 
 
 setup(
-    name='pyceres',
+    name='dplus_ceres',
     version='0.3.0',
-    packages=['pyceres'],
-	install_requires=['numpy>=1.10'],
+    packages=['dplus_ceres'],
+	install_requires=['numpy>=1.23.0,<1.24'],
+    python_requires='>=3.7',
     include_package_data=True,
     license=LICENSE,  # example license
-    description='A Python wrapper for Ceres 2.0',
+    description='A Python wrapper of Ceres 2.0 - for DPlus',
     url='http://www.researchsoftware.co.il',
     author='Devora Witty',
     author_email='devora@researchsoftware.co.il',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Science/Research',
-        'License :: Other/Proprietary License',
+        'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
     cmdclass={
         'prepare': PrepareCommand,
@@ -163,8 +167,8 @@ setup(
     },
     ext_modules=[
         Extension(
-             "pyceres",
-             ["pyceres/pyceres.pyx", "pyceres/call_cost_function.pyx", "pyceres/iteration_callback_func.pyx"],
+             "dplus_ceres",
+             ["dplus_ceres/dplus_ceres.pyx", "dplus_ceres/call_cost_function.pyx", "dplus_ceres/iteration_callback_func.pyx"],
              language='c++',
              include_dirs=[CERES_INCLUDE, INCLUDE_DIR, COMMON_DIR, MINIGLOG, numpy.get_include()],
              define_macros=macros,

@@ -1,6 +1,11 @@
 Version History
 ===============
 
+0.4.0
+--------
+* Add Tal's differniation code
+* Rename package to dplus_ceres
+
 0.3.0
 --------
 * Compiled for Windows as well

@@ -1,8 +1,8 @@
 *.egg-info/
-pyceres/*.cpp
-pyceres/*.h
-!pyceres/py_cost_func_wrapper.h
-!pyceres/py_iter_callback_wrapper.h
+dplus_ceres/*.cpp
+dplus_ceres/*.h
+!dplus_ceres/py_cost_func_wrapper.h
+!dplus_ceres/py_iter_callback_wrapper.h
 env/
 env*
 build/
