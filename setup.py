@@ -139,10 +139,10 @@ class MoveCommand(setuptools.Command):
 
 setup(
     name='dplus_ceres',
-    version='0.4.0',
+    version='0.5.0',
     packages=['dplus_ceres'],
-	install_requires=['numpy>=1.23.0,<1.24'],
-    python_requires='>=3.7',
+	install_requires=['numpy>=1.23.0'],
+    python_requires='>=3.8',
     include_package_data=True,
     license=LICENSE,  # example license
     description='A Python wrapper of Ceres 2.0 - for DPlus',
