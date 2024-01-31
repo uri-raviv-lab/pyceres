@@ -10,7 +10,7 @@ jobs:
     name: Create the manylinux wheels for all supported Python versions
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build docker image
         run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest
       - name: Copy wheels
