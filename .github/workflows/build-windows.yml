@@ -41,9 +41,8 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           body: "Windows Wheels"
-      - name: upload release to PyPI
-        permissions:
-          id-token: write
-        steps:
-          - name: Publish package distributions to PyPI
-            uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Upload release to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+            permissions:
+            id-token: write
