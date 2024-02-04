@@ -26,8 +26,8 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           body: "Manylinux Wheels"
-      - name: Upload release to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-            permissions:
-            id-token: write
+      # - name: Upload release to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #       permissions:
+      #       id-token: write
