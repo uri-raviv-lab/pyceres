@@ -44,7 +44,7 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: python-package-distributions
-            path: artifacts
+            path: dplus*.whl
             retention-days: 1
 
     pypi-publish:
@@ -62,7 +62,7 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             name: python-package-distributions
-            path: artifacts
+            path: dplus*.whl
       # publish to PyPI
         - name: Publish package distributions to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1
