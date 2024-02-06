@@ -44,11 +44,13 @@ jobs:
           uses: actions/upload-artifact@v4
           with:
             name: python-package-distributions
-            path: dist
+            path: artifacts
+            retention-days: 1
 
     pypi-publish:
       runs-on: ubuntu-latest
       name: upload release to PyPI
+      needs: windows-wheels
       # Specifying a GitHub environment is optional, but strongly encouraged
       environment: release
       permissions:
@@ -60,7 +62,7 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             name: python-package-distributions
-            path: dist
+            path: artifacts
       # publish to PyPI
         - name: Publish package distributions to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1
