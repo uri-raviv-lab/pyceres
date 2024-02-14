@@ -30,3 +30,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1           
         with:
             id-token: write
+            file: dplus-ceres-wheels/dplus*.whl
