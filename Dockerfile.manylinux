@@ -14,7 +14,7 @@ WORKDIR /src
 
 COPY ./requirements.txt /src/requirements.txt
 # First, compile the external packages. We only need to compile the external packages once for all Python versions.
-# We use /opt/python/cp38-cp38/bin for this.
+# We use /opt/python/cp39-cp39/bin for this.
 
 RUN /opt/python/cp39-cp39/bin/pip install -r requirements.txt
 
@@ -36,10 +36,6 @@ RUN /opt/python/cp39-cp39/bin/python setup.py prepare
 RUN /opt/python/cp39-cp39/bin/pip wheel .
 # dplus-ceres and dplus-api must have the exact same numpy. We use numpy 1.26 which doesn't support
 # Python 3.8, so we dropped support for it, as well.
-# RUN /opt/python/cp37-cp37m/bin/pip install -r requirements.txt
-# RUN /opt/python/cp37-cp37m/bin/pip wheel .
-#RUN /opt/python/cp39-cp39/bin/pip install -r requirements.txt
-#RUN /opt/python/cp39-cp39/bin/pip wheel .
 RUN /opt/python/cp310-cp310/bin/pip install -r requirements.txt
 RUN /opt/python/cp310-cp310/bin/pip wheel .
 RUN /opt/python/cp311-cp311/bin/pip install -r requirements.txt
