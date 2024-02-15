@@ -11,11 +11,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Python 3.
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          architecture: x64
+      # - name: Set up Python 3.12
+        # uses: actions/setup-python@v5
+        # with:
+        #   python-version: '3.12'
+        #   architecture: x64
       - name: Build docker image
         run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest
       - name: Copy wheels
@@ -35,4 +35,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1           
         with:
             id-token: write
-            file: dplus-ceres-wheels/dplus*.whl
+            packages-dir: dplus-ceres-wheels #/dplus*.whl
