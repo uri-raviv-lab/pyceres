@@ -7,10 +7,18 @@ on:
 jobs:
   manylinux-wheels:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
     name: Create the manylinux wheels for all supported Python versions
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up Python 3.
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
       - name: Build docker image
         run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest
       - name: Copy wheels
