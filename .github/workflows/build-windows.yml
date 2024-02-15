@@ -65,7 +65,7 @@ jobs:
           uses: actions/download-artifact@v4
           with:
             name: dplus-ceres-${{ matrix.python-version }}
-            path: dplus*.whl
+            path: ./dplus*.whl
       # publish to PyPI
         - name: Publish package distributions to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1

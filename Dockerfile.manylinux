@@ -9,8 +9,7 @@
 # Note: DO NOT PUSH THIS TO Dockerhub - it makes no sense
 
 
-FROM quay.io/pypa/manylinux_2_24_x86_64
-FROM python:3.12
+FROM quay.io/pypa/manylinux_2_28_x86_64
 WORKDIR /src
 
 COPY ./requirements.txt /src/requirements.txt
