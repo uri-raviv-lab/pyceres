@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=66", "wheel", "cython", "numpy<=2.0.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff.lint]
+select = ["NPY201"]
+
+[project]
+name = "dplus-ceres"
+dynamic = ["version"]
+description = "A Python wrapper of Ceres 2.0 - for DPlus"
+readme = "README.md"
+license = { file = "LICENSE.txt" }
+authors = [
+    { name = "Eytan Balken", email = "eytan.balken@mail.huji.ac.il" },
+    { name = "Devora Witty", email = "devorawitty@chelem.co.il" }
+]
+classifiers = [
+    "Development Status :: 5",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Chemistry"
+]
+dependencies = [
+    "numpy<=2.0.2",
+    "psutil>=5.6.3",
+    "requests>=2.10.0"
+]

@@ -5,39 +5,71 @@ on:
       - v*
 
 jobs:
-  windows-wheels:
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        python-version: [ '3.8', '3.9', '3.10', '3.11' ]
-    name: Create the Windows Wheel for Python ${{ matrix.python-version }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          architecture: x64
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
-      - name: Install cmake
-        uses: jwlawson/actions-setup-cmake@v1.13
-        with:
-          cmake-version: '3.22.x'        
-      - name: Set Python environment
-        run: |
-          pip install -r requirements.txt
-          pip install wheel
-      - name: Create the wheel
-        run: ./build-windows.ps1
-      - name: Upload to Release
-        id: upload-release-asset
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dplus*.whl
-          file_glob: true
-          tag: ${{ github.ref }}
-          overwrite: true
-          body: "Windows Wheels"
+    windows-wheels:
+      runs-on: windows-latest
+      strategy:
+        matrix:
+          python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+      name: Create the Windows Wheel for Python ${{ matrix.python-version }}
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+        - name: Setup Python
+          uses: actions/setup-python@v5
+          with:
+            python-version: ${{ matrix.python-version }}
+            architecture: x64
+        - name: Add msbuild to PATH
+          uses: microsoft/setup-msbuild@v2
+        - name: Install cmake
+          uses: jwlawson/actions-setup-cmake@v2.0
+          with:
+            cmake-version: '3.22.x'        
+        - name: Set Python environment
+          run: |
+            pip install -r requirements.txt
+        - name: Create the wheel
+          run: ./build-windows.ps1
+        - name: Upload to Release
+          id: upload-release-asset
+          uses: svenstaro/upload-release-action@v2
+          with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            file: dplus*.whl
+            file_glob: true
+            tag: ${{ github.ref }}
+            overwrite: true
+            body: "Windows Wheels"
+
+  # This should be checked and understood to ease the release process, problem is packages-dir is not working
+    #     - name: Store the binary wheel
+    #       uses: actions/upload-artifact@v4
+    #       with:
+    #         name: dplus-ceres-${{ matrix.python-version }}
+    #         path: dplus*.whl
+    #         retention-days: 1
+
+    # pypi-publish:
+    #   runs-on: ubuntu-latest
+    #   strategy:
+    #     matrix:
+    #       python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+    #   name: upload release to PyPI
+    #   needs: windows-wheels
+    #   # Specifying a GitHub environment is optional, but strongly encouraged
+    #   environment: release
+    #   permissions:
+    #     # IMPORTANT: this permission is mandatory for trusted publishing
+    #     id-token: write
+    #   steps:
+    #     # retrieve your distributions here
+    #     - name: Download all the dists
+    #       uses: actions/download-artifact@v4
+    #       with:
+    #         name: dplus-ceres-${{ matrix.python-version }}
+    #         path: ./dplus*.whl
+    #   # publish to PyPI
+    #     - name: Publish package distributions to PyPI
+    #       uses: pypa/gh-action-pypi-publish@release/v1
+    #       with:
+    #         packages-dir: ./

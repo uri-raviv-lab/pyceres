@@ -8,9 +8,11 @@ jobs:
   manylinux-wheels:
     runs-on: ubuntu-latest
     name: Create the manylinux wheels for all supported Python versions
+    # permissions:
+    #   id-token: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build docker image
         run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest
       - name: Copy wheels
@@ -26,5 +28,7 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           body: "Manylinux Wheels"
-
-
+      # - name: Upload release to PyPI
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   with:
+      #     packages-dir: dplus-ceres-wheels #/dplus*.whl
