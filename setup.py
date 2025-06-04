@@ -134,8 +134,6 @@ class MoveCommand(setuptools.Command):
             print("copying failed")
          
      
-        
-
 
 setup(
     name='dplus_ceres',
