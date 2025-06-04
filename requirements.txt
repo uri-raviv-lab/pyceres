@@ -2,3 +2,4 @@ setuptools
 numpy<=2.0.2
 Cython
 wheel
+build
