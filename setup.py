@@ -141,8 +141,8 @@ setup(
     name='dplus_ceres',
     version='0.6.0',
     packages=['dplus_ceres'],
-	install_requires=['numpy>=1.23.0'],
-    python_requires='>=3.9',
+	install_requires=['numpy>=2.0.0'],
+    # python_requires="dynamic", #'>=3.9',
     include_package_data=True,
     license=LICENSE,  # example license
     description='A Python wrapper of Ceres 2.0 - for DPlus',

@@ -5,4 +5,6 @@ pip install -r .\requirements.txt
 pip install wheel
 python .\compile.py
 python setup.py prepare
-pip wheel .
+python -m setup.py build
+python -m build --wheel
+#pip wheel .
