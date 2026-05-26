@@ -11,6 +11,18 @@ COMMON_DIR = os.path.join(INCLUDE_DIR, "Common")
 CERES_INCLUDE = os.path.join(COMMON_DIR, "ceres", "include")
 MINIGLOG=os.path.join(CERES_INCLUDE, "miniglog")
 
+# GITHUB_VERSION = os.environ.get('GITHUB_VERSION')
+# if GITHUB_VERSION is not None:
+#     # When running in a github workflow, take the version from the environment
+#     if GITHUB_VERSION.startswith('v'):
+#         VERSION_STR = GITHUB_VERSION[1:]
+#     elif GITHUB_VERSION.startswith('refs/tags/api-v'):
+#         VERSION_STR = GITHUB_VERSION[15:]
+#     else:
+#         VERSION_STR = GITHUB_VERSION
+# else:
+#     VERSION_STR = "0.6.0"
+
 with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding="utf-8") as readme:
     README = readme.read()
 
@@ -137,7 +149,7 @@ class MoveCommand(setuptools.Command):
 
 setup(
     name='dplus_ceres',
-    version='0.6.0',
+    version=VERSION_STR,
     packages=['dplus_ceres'],
 	install_requires=['numpy>=2.0.0'],
     # python_requires="dynamic", #'>=3.9',
