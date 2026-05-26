@@ -11,17 +11,17 @@ COMMON_DIR = os.path.join(INCLUDE_DIR, "Common")
 CERES_INCLUDE = os.path.join(COMMON_DIR, "ceres", "include")
 MINIGLOG=os.path.join(CERES_INCLUDE, "miniglog")
 
-# GITHUB_VERSION = os.environ.get('GITHUB_VERSION')
-# if GITHUB_VERSION is not None:
-#     # When running in a github workflow, take the version from the environment
-#     if GITHUB_VERSION.startswith('v'):
-#         VERSION_STR = GITHUB_VERSION[1:]
-#     elif GITHUB_VERSION.startswith('refs/tags/api-v'):
-#         VERSION_STR = GITHUB_VERSION[15:]
-#     else:
-#         VERSION_STR = GITHUB_VERSION
-# else:
-#     VERSION_STR = "0.6.0"
+GITHUB_VERSION = os.environ.get('GITHUB_VERSION')
+if GITHUB_VERSION is not None:
+    # When running in a github workflow, take the version from the environment
+    if GITHUB_VERSION.startswith('v'):
+        VERSION_STR = GITHUB_VERSION[1:]
+    elif GITHUB_VERSION.startswith('refs/tags/api-v'):
+        VERSION_STR = GITHUB_VERSION[15:]
+    else:
+        VERSION_STR = GITHUB_VERSION
+else:
+    VERSION_STR = os.environ.get('SETUPTOOLS_SCM_PRETEND_VERSION', '0.0.0.dev0')
 
 with open(os.path.join(os.path.dirname(__file__), 'README.md'), encoding="utf-8") as readme:
     README = readme.read()
@@ -36,7 +36,8 @@ if sys.platform == 'win32':
     macros = [('GOOGLE_GLOG_DLL_DECL', '_CRT_SECURE_NO_WARNINGS'),
               ('CERES_USE_CXX_THREADS', None),
               ('_MBCS', None),
-              ('CERES_USING_STATIC_LIBRARY', None)]
+              ('CERES_USING_STATIC_LIBRARY', None),
+              ('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')]
     extra_compile_args = ['/Ox']
     # extra_link_args = ['/debug']
 elif sys.platform in ['linux', 'linux2']:
@@ -45,7 +46,8 @@ elif sys.platform in ['linux', 'linux2']:
     macros = [('GOOGLE_GLOG_DLL_DECL', '_CRT_SECURE_NO_WARNINGS'),
               ('CERES_USE_CXX_THREADS', None),
               ('_MBCS', None),
-              ('CERES_USING_STATIC_LIBRARY', None)]
+              ('CERES_USING_STATIC_LIBRARY', None),
+              ('NPY_NO_DEPRECATED_API', 'NPY_1_7_API_VERSION')]
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
@@ -105,7 +107,7 @@ class PrepareCommand(setuptools.Command):
     def cython(self, pyx):
         from Cython.Compiler.CmdLine import parse_command_line
         from Cython.Compiler.Main import compile
-        options, sources = parse_command_line(['-2', '-v', '--cplus', pyx])
+        options, sources = parse_command_line(['-3', '-v', '--cplus', pyx])
         result = compile(sources, options)
         if result.num_errors > 0:
             print('Errors converting %s to C++' % pyx, file=sys.stderr)
@@ -152,7 +154,7 @@ setup(
     version=VERSION_STR,
     packages=['dplus_ceres'],
 	install_requires=['numpy>=2.0.0'],
-    # python_requires="dynamic", #'>=3.9',
+    python_requires=">=3.11",
     include_package_data=True,
     license=LICENSE,  # example license
     description='A Python wrapper of Ceres 2.0 - for DPlus',
@@ -166,10 +168,9 @@ setup(
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
     ],
     cmdclass={
         'prepare': PrepareCommand,

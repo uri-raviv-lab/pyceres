@@ -8,8 +8,6 @@ jobs:
   manylinux-wheels:
     runs-on: ubuntu-latest
     name: Create the manylinux wheels for all supported Python versions
-    # permissions:
-    #   id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +26,8 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           body: "Manylinux Wheels"
-      # - name: Upload release to PyPI
-      #   uses: pypa/gh-action-pypi-publish@release/v1
-      #   with:
-      #     packages-dir: dplus-ceres-wheels #/dplus*.whl
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: dplus-ceres-wheels/

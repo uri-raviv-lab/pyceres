@@ -3,6 +3,7 @@
 
 import os
 import shutil
+import subprocess
 
 
 def is_win():
@@ -46,12 +47,25 @@ def prepare_ceres():
     finally:
         os.chdir(cwd)
 
+def find_msbuild():
+    vswhere = r"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
+    if os.path.isfile(vswhere):
+        result = subprocess.check_output(
+            [vswhere, '-latest', '-requires', 'Microsoft.Component.MSBuild',
+             '-find', r'MSBuild\**\Bin\MSBuild.exe'],
+            text=True
+        ).strip()
+        if result:
+            return result.splitlines()[0]
+    return 'msbuild'
+
 def compile_ceres():
     cwd = os.getcwd()
 
     try:
         if os.name == 'nt':
-            os.system('msbuild ./build/ceres/internal/ceres/ceres.vcxproj /p:Configuration=Release')
+            msbuild = find_msbuild()
+            os.system(f'"{msbuild}" ./build/ceres/internal/ceres/ceres.vcxproj /p:Configuration=Release')
         else:
             os.chdir('build/ceres')
             os.system('make -j8')
