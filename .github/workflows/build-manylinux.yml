@@ -12,7 +12,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Build docker image
-        run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest
+        run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest --build-arg GITHUB_VERSION=${{ github.ref_name }}
       - name: Copy wheels
         run: |
           docker run --rm --name dplus-ceres-manylinux -v `pwd`:/external dplus-ceres-manylinux:latest

@@ -10,6 +10,10 @@
 
 
 FROM quay.io/pypa/manylinux_2_28_x86_64
+
+ARG GITHUB_VERSION=0.0.0.dev0
+ENV GITHUB_VERSION=$GITHUB_VERSION
+
 WORKDIR /src
 
 COPY ./requirements.txt /src/requirements.txt
