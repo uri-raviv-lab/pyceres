@@ -16,7 +16,7 @@ authors = [
     { name = "Devora Witty", email = "devorawitty@chelem.co.il" }
 ]
 classifiers = [
-    "Development Status :: 5",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "License :: Other/Proprietary License",
