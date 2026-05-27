@@ -8,13 +8,13 @@ jobs:
   manylinux-wheels:
     runs-on: ubuntu-latest
     name: Create the manylinux wheels for all supported Python versions
-    # permissions:
-    #   id-token: write
+    permissions:
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Build docker image
-        run: docker build -f Dockerfile.manylinux . -t dplus-ceres-manylinux:latest
+        run: docker build -f Dockerfile.manylinux --build-arg GITHUB_VERSION=${{ github.ref_name }} . -t dplus-ceres-manylinux:latest
       - name: Copy wheels
         run: |
           docker run --rm --name dplus-ceres-manylinux -v `pwd`:/external dplus-ceres-manylinux:latest
@@ -31,5 +31,4 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
           packages-dir: dplus-ceres-wheels/

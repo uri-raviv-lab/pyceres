@@ -135,9 +135,14 @@ class MoveCommand(setuptools.Command):
          
      
 
+GITHUB_VERSION = os.environ.get('GITHUB_VERSION', '')
+if GITHUB_VERSION.startswith('v'):
+    GITHUB_VERSION = GITHUB_VERSION[1:]
+VERSION = GITHUB_VERSION if GITHUB_VERSION else '1.0.0'
+
 setup(
     name='dplus_ceres',
-    version='0.6.0',
+    version=VERSION,
     packages=['dplus_ceres'],
 	install_requires=['numpy>=2.0.0'],
     # python_requires="dynamic", #'>=3.9',
