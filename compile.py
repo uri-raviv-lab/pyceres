@@ -51,7 +51,7 @@ def compile_ceres():
 
     try:
         if os.name == 'nt':
-            os.system('msbuild ./build/ceres/internal/ceres/ceres.vcxproj /p:Configuration=Release')
+            os.system('msbuild ./build/ceres/internal/ceres/ceres.vcxproj /p:Configuration=Release /m')
         else:
             os.chdir('build/ceres')
             os.system('make -j8')

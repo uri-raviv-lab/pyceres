@@ -1,5 +1,5 @@
 setuptools
-numpy<=2.0.2
+numpy>=2
 Cython
 wheel
 build
