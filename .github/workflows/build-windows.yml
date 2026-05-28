@@ -19,7 +19,7 @@ jobs:
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v3
       - name: Install cmake
-        uses: jwlawson/actions-setup-cmake@v2.0
+        uses: jwlawson/actions-setup-cmake@v2.2.0
         with:
           cmake-version: '3.22.x'
       - name: Install dependencies
@@ -27,7 +27,7 @@ jobs:
       - name: Compile Ceres
         run: python compile.py
       - name: Upload Ceres lib
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ceres-lib-windows
           path: build/ceres/lib/
@@ -52,14 +52,10 @@ jobs:
           architecture: x64
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v3
-      - name: Install cmake
-        uses: jwlawson/actions-setup-cmake@v2.0
-        with:
-          cmake-version: '3.22.x'
       - name: Install dependencies
         run: pip install -r requirements.txt; pip install wheel
       - name: Download Ceres lib
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: ceres-lib-windows
           path: build/ceres/lib/
@@ -68,8 +64,8 @@ jobs:
           GITHUB_VERSION: ${{ github.ref_name }}
         run: |
           python setup.py prepare
-          python -m setup.py build
-          python -m build --wheel
+          python setup.py build
+          python -m build --wheel --no-isolation
       - name: Upload to Release
         id: upload-release-asset
         uses: svenstaro/upload-release-action@v2
@@ -81,7 +77,7 @@ jobs:
           overwrite: true
           body: "Windows Wheels"
       - name: Store wheel as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-wheel-${{ matrix.python-version }}
           path: ./dist/dplus*.whl
@@ -94,7 +90,7 @@ jobs:
       id-token: write
     steps:
       - name: Download all wheels
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: windows-wheel-*
           path: dist/
